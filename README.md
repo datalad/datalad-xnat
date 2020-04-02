@@ -3,8 +3,13 @@
 [![GitHub release](https://img.shields.io/github/release/datalad/datalad-xnat.svg)](https://GitHub.com/datalad/datalad-xnat/releases/) [![PyPI version fury.io](https://badge.fury.io/py/datalad-xnat.svg)](https://pypi.python.org/pypi/datalad-xnat/)
 
 This software is a [DataLad](http://datalad.org) extension that equips DataLad
-with a set of commands to obtain (and monitor) imaging data releases of the
-UKbiobank.
+with a set of commands to track XNAT projects.
+
+XNAT is an open source imaging informatics platform developed by the
+Neuroinformatics Research Group at Washington University. It facilitates common
+management, productivity, and quality assurance tasks for imaging and
+associated data. XNAT can be used to support a wide range of neuro/medical
+imaging-based projects.
 
 Command(s) provided by this extension
 

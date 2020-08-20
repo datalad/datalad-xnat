@@ -117,7 +117,7 @@ class Init(Interface):
             projects = xn.select.projects().get()
             ui.message(
                 'No project name specified. The following projects are '
-                'available on {}:'.format(url))
+                'available on {} for user {}:'.format(url, cred['user']))
             for p in sorted(projects):
                 # list and prep for C&P
                 # TODO multi-column formatting?

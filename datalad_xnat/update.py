@@ -143,7 +143,7 @@ class Update(Interface):
 
         # create csv table for each subject that contains subject info &
         # urls for each file
-        table_header = ['subject','experiment','scan','resource','filename','url',]
+        table_header = ['subject', 'experiment', 'scan', 'resource', 'filename', 'url']
         for subject in subjects:
             csv_path = f"addurl_files/{subject}_table.csv"
             sub_table = ds.pathobj / '{}'.format(csv_path)

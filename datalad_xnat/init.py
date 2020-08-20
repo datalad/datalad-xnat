@@ -143,6 +143,17 @@ class Init(Interface):
         lgr.info('XNAT reports %i subjects currently on-record for project %s',
                  nsubj, project)
 
+        # check if dataset already initialized
+        auth_dir = ds.pathobj / '.datalad' / 'providers'
+        if auth_dir.exists() and not force:
+            yield dict(
+                res,
+                status='error',
+                message='Dataset found already initialized, '
+                        'use `force` to reinitialize',
+            )
+            return
+
         # put essential configuration into the dataset
         config.set('datalad.xnat.default.url',url,where='dataset')
         config.set('datalad.xnat.default.project',project,where='dataset')

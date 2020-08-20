@@ -144,9 +144,20 @@ class Init(Interface):
                  nsubj, project)
 
         # put essential configuration into the dataset
-        config.set('datalad.
+        config.set('datalad.xnat.default.url',url,where='dataset')
+        config.set('datalad.xnat.default.project',project,where='dataset')
+
+        ds.save(
+            path='.datalad/config',
+            to_git=True,
+            message="Configure default XNAT url and project",
+        )
+
+        # Configure XNAT access authentication
+        ds.run_procedure(spec='cfg_xnat_dataset')
 
         yield dict(
             res,
             status='ok',
         )
+        return

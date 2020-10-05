@@ -159,7 +159,7 @@ class Init(Interface):
         config.set('datalad.xnat.default.project', project, where='dataset')
 
         ds.save(
-            path='.datalad/config',
+            path=ds.pathobj / '.datalad' / 'config',
             to_git=True,
             message="Configure default XNAT url and project",
         )

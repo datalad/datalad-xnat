@@ -155,7 +155,7 @@ class Init(Interface):
             return
 
         # put essential configuration into the dataset
-        config.set('datalad.xnat.default.url', url, where='dataset')
+        config.set('datalad.xnat.default.url', url, where='dataset', reload=False)
         config.set('datalad.xnat.default.project', project, where='dataset')
 
         ds.save(

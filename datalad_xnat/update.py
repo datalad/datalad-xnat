@@ -141,37 +141,16 @@ class Update(Interface):
             # if all, get list of all subjects
             subjects = xn.select.project(xnat_project).subjects().get()
 
-        # create csv table for each subject that contains subject info &
-        # urls for each file
-        table_header = ['subject', 'experiment', 'scan', 'resource', 'filename', 'url']
-        for subject in subjects:
-            csv_path = f"addurl_files/{subject}_table.csv"
-            sub_table = ds.pathobj / '{}'.format(csv_path)
+        from datalad_xnat.parser import parse_xnat
+        yield from parse_xnat(
+            ds,
+            subs=subs,
+            force=force,
+            xn=xn,
+            xnat_url=xnat_url,
+            xnat_project=xnat_project,
+        )
 
-            # check if table already exists
-            if sub_table.exists():
-                lgr.info('%s already exists', csv_path)
-                #TODO: provide more info about existing file
-                sub_table.unlink()
-
-            sub_table.parent.mkdir(parents=True, exist_ok=True)
-
-            # write subject info to file
-            with open(sub_table, 'w') as outfile:
-                fh = csv.writer(outfile, delimiter=',')
-                fh.writerow(table_header)
-
-                lgr.info('Querying info for subject %s', subject)
-                xnsub = xn.select.project(xnat_project).subject(subject)
-                for experiment in xnsub.experiments().get():
-                    for scan in xnsub.experiment(experiment).scans().get():
-                        for resource in xnsub.experiment(experiment).scan(scan).resources().get():
-                            for filename in xnsub.experiment(experiment).scan(scan).resource(resource).files().get():
-                                url = f"{xnat_url}/data/projects/{xnat_project}/subjects/{subject}/experiments/{experiment}/scans/{scan}/resources/{resource}/files/{filename}"
-                                # create line for each file with necessary subject info
-                                fh.writerow([subject, experiment, scan, resource, filename, url])
-
-            # save current file
             ds.save(
                 str(sub_table),
                 to_git=True,

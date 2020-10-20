@@ -15,10 +15,10 @@ import csv
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
-from datalad.interface.add_archive_content import AddArchiveContent
 from datalad.support.constraints import (
     EnsureStr,
     EnsureNone,
+    EnsureChoice,
 )
 from datalad.support.param import Parameter
 from datalad.support.exceptions import CommandError
@@ -35,6 +35,8 @@ from datalad.distribution.dataset import (
 
 from datalad.downloaders.credentials import UserPassword
 
+#import datalad.plugin.addurls
+
 __docformat__ = 'restructuredtext'
 
 lgr = logging.getLogger('datalad.xnat.update')
@@ -42,34 +44,54 @@ lgr = logging.getLogger('datalad.xnat.update')
 
 @build_doc
 class Update(Interface):
-    """Lookup subjects for configured XNAT project and build csv tables for each
-    subject that can be fed to datalad addurls.
+    """Update files for a subject(s) of an XNAT project.
 
-    This command expects an xnat-init initialized DataLad dataset.
+    This command expects an xnat-init initialized DataLad dataset. The dataset
+    may or may not have existing content already.
     """
 
     _params_ = dict(
         dataset=Parameter(
             args=("-d", "--dataset"),
             metavar='DATASET',
-            doc="""specify the dataset to perform the initialization on""",
+            doc="""specify the dataset to perform the update on""",
             constraints=EnsureDataset() | EnsureNone()
         ),
-        subject=Parameter(
-            args=("-s", "--subject"),
-            doc="""Specify the subject for whom to build a csv table.
+        subjects=Parameter(
+            args=("-s", "--subjects"),
+            nargs='+',
+            doc="""Specify the subject(s) to downloaded associated files for.
             'list': list existing subjects,
-            'all': create a table for all existing subjects""",
+            'all': download files for all existing subjects""",
         ),
+        subdataset=Parameter(
+            args=("-x", "--subdataset"),
+            doc="""Specify at what level to create a subdataset.
+            'subject': create a subdataset for each subject,
+            'session': create a subdataset for each session,
+            'scan': create a subdataset for each scan
+            By deafult no subdataset is created.""",
+        ),
+        ifexists=Parameter(
+            args=("--ifexists",),
+            doc="""Flag for addurls""",
+            constraints=EnsureChoice(None, "overwrite", "skip")
+        ),
+        force=Parameter(
+            args=("-f", "--force",),
+            doc="""force (re-)building the addurl tables""",
+            action='store_true'),
     )
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(dataset=None, subject=None):
+    def __call__(subjects, dataset=None, subdataset=None, ifexists=None, force=False):
         from pyxnat import Interface as XNATInterface
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
+
+        subjects = ensure_list(subjects)
 
         # prep for yield
         res = dict(
@@ -79,67 +101,57 @@ class Update(Interface):
             logger=lgr,
             refds=ds.path,
         )
-
         # obtain configured XNAT url and project name
         xnat_cfg_name = ds.config.get('datalad.xnat.default-name', 'default')
         cfg_section = 'datalad.xnat.{}'.format(xnat_cfg_name)
         xnat_url = ds.config.obtain(
-                '{}.url'.format(cfg_section),
-                dialog_type='question',
-                title='XNAT server address',
-                text='Full URL of XNAT server (e.g. https://xnat.example.com:8443/xnat)',
-                store=False,
-                reload=False)
+            '{}.url'.format(cfg_section),
+            dialog_type='question',
+            title='XNAT server address',
+            text='Full URL of XNAT server (e.g. https://xnat.example.com:8443/xnat)',
+            store=False,
+            reload=False)
 
         xnat_project = ds.config.obtain(
-                '{}.project'.format(cfg_section),
-                dialog_type='question',
-                title='XNAT project',
-                text='Project on XNAT server',
-                store=False,
-                reload=False)
+            '{}.project'.format(cfg_section),
+            dialog_type='question',
+            title='XNAT project',
+            text='Project on XNAT server',
+            store=False,
+            reload=False)
 
         # obtain user credentials
         cred = UserPassword(name=xnat_url, url=None)()
         xn = XNATInterface(server=xnat_url, **cred)
 
-        if subject is None:
-            from datalad.ui import ui
-            # get list of all subjects
-            subjects = xn.select.project(xnat_project).subjects().get()
-            ui.message(
-                    'No subject specified. The following subjects are available '
-                    'for XNAT project {}:'.format(xnat_project))
-            for s in sorted(subjects):
-                ui.message(" {}".format(quote_cmdlinearg(s)))
-            return
-
         # provide subject list
-        if subject == 'list':
+        if 'list' in subjects:
             from datalad.ui import ui
-            subjects = xn.select.project(xnat_project).subjects().get()
+            subs = xn.select.project(xnat_project).subjects().get()
             ui.message(
-                    'The following subjects are available for XNAT '
-                    'project {}:'.format(xnat_project))
-            for s in sorted(subjects):
+                'The following subjects are available for XNAT '
+                'project {}:'.format(xnat_project))
+            for s in sorted(subs):
                 ui.message(" {}".format(quote_cmdlinearg(s)))
             return
 
-        # query the specified subject to make sure it exists and is accessible
-        if subject != 'all':
+        # query the specified subject(s) to make sure it exists and is accessible
+        if 'all' not in subjects:
             from datalad.ui import ui
-            sub = xn.select.project(xnat_project).subject(subject)
-            nexp = len(sub.experiments().get())
-            if nexp > 0:
-                subjects = [subject]
-            else:
-                ui.message(
-                    'Failed to obtain information on subject {} from XNAT '
-                    'project {}:'.format(subject, xnat_project))
-                return
+            subs = []
+            for s in subjects:
+                sub = xn.select.project(xnat_project).subject(s)
+                nexp = len(sub.experiments().get())
+                if nexp > 0:
+                    subs.append(s)
+                else:
+                    ui.message(
+                        'Failed to obtain information on subject {} from XNAT '
+                        'project {}:'.format(s, xnat_project))
+                    return
         else:
             # if all, get list of all subjects
-            subjects = xn.select.project(xnat_project).subjects().get()
+            subs = xn.select.project(xnat_project).subjects().get()
 
         from datalad_xnat.parser import parse_xnat
         yield from parse_xnat(
@@ -151,13 +163,38 @@ class Update(Interface):
             xnat_project=xnat_project,
         )
 
+        # determine if/where a subdataset should be created
+        if subdataset is None:
+            filenameformat = '{subject}/{experiment}/{scan}/{filename}'
+        elif subdataset == 'subject':
+            filenameformat = '{subject}//{experiment}/{scan}/{filename}'
+        elif subdataset == 'session':
+            filenameformat = '{subject}/{experiment}//{scan}/{filename}'
+        elif subdataset == 'scan':
+            filenameformat = '{subject}/{experiment}/{scan}//{filename}'
+
+        # add file urls for subject(s)
+        addurl_dir = ds.pathobj / 'addurl_files'
+        for s in subs:
+            lgr.info('Downloading files for subject %s', s)
+            table = f"{addurl_dir}/{s}_table.csv"
+            ds.addurls(
+                table, '{url}', filenameformat,
+                ifexists=ifexists,
+                save=False,
+                cfg_proc='xnat_dataset',
+                #result_renderer='default',
+            )
+            file_paths = [table, s]
             ds.save(
-                str(sub_table),
-                to_git=True,
-                message=f"Update XNAT info for subject {subject}"
+                path=file_paths,
+                message=f"Update files for subject {s}",
+                recursive=True
             )
 
-            lgr.info('%s created', csv_path)
+        lgr.info('Files were updated for the following subjects in XNAT project %s:', xnat_project)
+        for s in sorted(subs):
+            lgr.info(" {}".format(quote_cmdlinearg(s)))
 
         yield dict(
             res,

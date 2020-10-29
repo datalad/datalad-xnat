@@ -104,21 +104,8 @@ class Update(Interface):
         # obtain configured XNAT url and project name
         xnat_cfg_name = ds.config.get('datalad.xnat.default-name', 'default')
         cfg_section = 'datalad.xnat.{}'.format(xnat_cfg_name)
-        xnat_url = ds.config.obtain(
-            '{}.url'.format(cfg_section),
-            dialog_type='question',
-            title='XNAT server address',
-            text='Full URL of XNAT server (e.g. https://xnat.example.com:8443/xnat)',
-            store=False,
-            reload=False)
-
-        xnat_project = ds.config.obtain(
-            '{}.project'.format(cfg_section),
-            dialog_type='question',
-            title='XNAT project',
-            text='Project on XNAT server',
-            store=False,
-            reload=False)
+        xnat_url = ds.config.get('{}.url'.format(cfg_section))
+        xnat_project = ds.config.get('{}.project'.format(cfg_section))
 
         # obtain user credentials
         cred = UserPassword(name=xnat_url, url=None)()

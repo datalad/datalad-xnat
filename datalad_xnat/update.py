@@ -25,6 +25,7 @@ from datalad.support.exceptions import CommandError
 from datalad.utils import (
     ensure_list,
     quote_cmdlinearg,
+    with_pathsep,
 )
 
 from datalad.distribution.dataset import (
@@ -64,13 +65,14 @@ class Update(Interface):
             'list': list existing subjects,
             'all': download files for all existing subjects""",
         ),
-        subdataset=Parameter(
-            args=("-x", "--subdataset"),
-            doc="""Specify at what level to create a subdataset.
-            'subject': create a subdataset for each subject,
-            'session': create a subdataset for each session,
-            'scan': create a subdataset for each scan
-            By deafult no subdataset is created.""",
+        path=Parameter(
+            args=("-O", "--path"),
+            doc="""Specify the directory structure for the downloaded files, and
+            if/where a subdataset should be created.
+            To include the subject, session, or scan, use the following format:
+            {subject}/{session}/{scan}/
+            To insert a subdataset at a specific directory level use '//':
+            {subject}/{session}//{scan}/""",
         ),
         ifexists=Parameter(
             args=("--ifexists",),
@@ -85,13 +87,14 @@ class Update(Interface):
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects, dataset=None, subdataset=None, ifexists=None, force=False):
+    def __call__(subjects, path="{subject}/{session}/{scan}/", dataset=None, ifexists=None, force=False):
         from pyxnat import Interface as XNATInterface
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
         subjects = ensure_list(subjects)
+        path = with_pathsep(path)
 
         # prep for yield
         res = dict(
@@ -140,42 +143,35 @@ class Update(Interface):
             # if all, get list of all subjects
             subs = xn.select.project(xnat_project).subjects().get()
 
+        # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat
-        yield from parse_xnat(
-            ds,
-            subs=subs,
-            force=force,
-            xn=xn,
-            xnat_url=xnat_url,
-            xnat_project=xnat_project,
-        )
-
-        # determine if/where a subdataset should be created
-        if subdataset is None:
-            filenameformat = '{subject}/{experiment}/{scan}/{filename}'
-        elif subdataset == 'subject':
-            filenameformat = '{subject}//{experiment}/{scan}/{filename}'
-        elif subdataset == 'session':
-            filenameformat = '{subject}/{experiment}//{scan}/{filename}'
-        elif subdataset == 'scan':
-            filenameformat = '{subject}/{experiment}/{scan}//{filename}'
-
-        # add file urls for subject(s)
         addurl_dir = ds.pathobj / 'addurl_files'
-        for s in subs:
-            lgr.info('Downloading files for subject %s', s)
-            table = f"{addurl_dir}/{s}_table.csv"
+        for sub in subs:
+            yield from parse_xnat(
+                ds,
+                sub=sub,
+                force=force,
+                xn=xn,
+                xnat_url=xnat_url,
+                xnat_project=xnat_project,
+            )
+
+            # add file urls for subject
+            lgr.info('Downloading files for subject %s', sub)
+            table = f"{addurl_dir}/{sub}_table.csv"
+            # this corresponds to the header field 'filename' in the csv table
+            filename = '{filename}'
+            filenameformat = f"{path}{filename}"
             ds.addurls(
                 table, '{url}', filenameformat,
                 ifexists=ifexists,
                 save=False,
                 cfg_proc='xnat_dataset',
-                #result_renderer='default',
+                result_renderer='default',
             )
-            file_paths = [table, s]
+
             ds.save(
-                path=file_paths,
-                message=f"Update files for subject {s}",
+                message=f"Update files for subject {sub}",
                 recursive=True
             )
 

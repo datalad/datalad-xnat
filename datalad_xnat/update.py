@@ -35,6 +35,7 @@ from datalad.distribution.dataset import (
 )
 
 from datalad.downloaders.credentials import UserPassword
+from urllib.parse import urlparse
 
 #import datalad.plugin.addurls
 
@@ -111,7 +112,9 @@ class Update(Interface):
         xnat_project = ds.config.get('{}.project'.format(cfg_section))
 
         # obtain user credentials
-        cred = UserPassword(name=xnat_url, url=None)()
+        parsed_url = urlparse(xnat_url)
+        no_proto_url='{}{}'.format(parsed_url.netloc, parsed_url.path).replace(' ', '')
+        cred = UserPassword(name=no_proto_url, url=None)()
         xn = XNATInterface(server=xnat_url, **cred)
 
         # provide subject list

@@ -31,7 +31,7 @@ from datalad.distribution.dataset import (
     require_dataset,
 )
 from datalad.downloaders.credentials import UserPassword
-
+from urllib.parse import urlparse
 
 __docformat__ = 'restructuredtext'
 
@@ -89,10 +89,12 @@ class Init(Interface):
             refds=ds.path,
         )
 
-        # obtain user credentials, use provided URL as identifier
+        # obtain user credentials, use simplified/stripped URL as identifier
         # given we don't have more knowledge than the user, do not
         # give a `url` to provide hints on how to obtain credentials
-        cred = UserPassword(name=url, url=None)()
+        parsed_url = urlparse(url)
+        no_proto_url='{}{}'.format(parsed_url.netloc, parsed_url.path).replace(' ', '')
+        cred = UserPassword(name=no_proto_url, url=None)()
 
         xn = XNATInterface(server=url, **cred)
 

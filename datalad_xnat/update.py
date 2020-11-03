@@ -78,7 +78,7 @@ class Update(Interface):
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects, dataset=None, ifexists=None, force=False):
+    def __call__(subjects='list', dataset=None, ifexists=None, force=False):
         from pyxnat import Interface as XNATInterface
 
         ds = require_dataset(
@@ -116,6 +116,9 @@ class Update(Interface):
                 'project {}:'.format(xnat_project))
             for s in sorted(subs):
                 ui.message(" {}".format(quote_cmdlinearg(s)))
+            ui.message(
+                'Specify a specific subject(s) or "all" to download associated '
+                'files for.')
             return
 
         # query the specified subject(s) to make sure it exists and is accessible

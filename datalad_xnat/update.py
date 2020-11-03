@@ -25,7 +25,6 @@ from datalad.support.exceptions import CommandError
 from datalad.utils import (
     ensure_list,
     quote_cmdlinearg,
-    with_pathsep,
 )
 
 from datalad.distribution.dataset import (
@@ -66,15 +65,6 @@ class Update(Interface):
             'list': list existing subjects,
             'all': download files for all existing subjects""",
         ),
-        path=Parameter(
-            args=("-O", "--path"),
-            doc="""Specify the directory structure for the downloaded files, and
-            if/where a subdataset should be created.
-            To include the subject, session, or scan, use the following format:
-            {subject}/{session}/{scan}/
-            To insert a subdataset at a specific directory level use '//':
-            {subject}/{session}//{scan}/""",
-        ),
         ifexists=Parameter(
             args=("--ifexists",),
             doc="""Flag for addurls""",
@@ -88,14 +78,13 @@ class Update(Interface):
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects, path="{subject}/{session}/{scan}/", dataset=None, ifexists=None, force=False):
+    def __call__(subjects, dataset=None, ifexists=None, force=False):
         from pyxnat import Interface as XNATInterface
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
         subjects = ensure_list(subjects)
-        path = with_pathsep(path)
 
         # prep for yield
         res = dict(
@@ -110,6 +99,7 @@ class Update(Interface):
         cfg_section = 'datalad.xnat.{}'.format(xnat_cfg_name)
         xnat_url = ds.config.get('{}.url'.format(cfg_section))
         xnat_project = ds.config.get('{}.project'.format(cfg_section))
+        file_path = ds.config.get('{}.path'.format(cfg_section))
 
         # obtain user credentials
         parsed_url = urlparse(xnat_url)
@@ -164,7 +154,7 @@ class Update(Interface):
             table = f"{addurl_dir}/{sub}_table.csv"
             # this corresponds to the header field 'filename' in the csv table
             filename = '{filename}'
-            filenameformat = f"{path}{filename}"
+            filenameformat = f"{file_path}{filename}"
             ds.addurls(
                 table, '{url}', filenameformat,
                 ifexists=ifexists,

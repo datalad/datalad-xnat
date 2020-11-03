@@ -23,6 +23,7 @@ from datalad.support.param import Parameter
 from datalad.utils import (
     ensure_list,
     quote_cmdlinearg,
+    with_pathsep,
 )
 
 from datalad.distribution.dataset import (
@@ -64,6 +65,15 @@ class Init(Interface):
             args=("-p", "--project",),
             doc="""name of an XNAT project to track""",
         ),
+        path=Parameter(
+            args=("-O", "--path",),
+            doc="""Specify the directory structure for the downloaded files, and
+            if/where a subdataset should be created.
+            To include the subject, session, or scan values, use the following
+            format: {subject}/{session}/{scan}/
+            To insert a subdataset at a specific directory level use '//':
+            {subject}/{session}//{scan}/""",
+        ),
         force=Parameter(
             args=("-f", "--force",),
             doc="""force (re-)initialization""",
@@ -72,13 +82,14 @@ class Init(Interface):
     @staticmethod
     @datasetmethod(name='xnat_init')
     @eval_results
-    def __call__(url, project=None, force=False, dataset=None):
+    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, dataset=None):
         from pyxnat import Interface as XNATInterface
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
 
         config = ds.config
+        path = with_pathsep(path)
 
         # prep for yield
         res = dict(
@@ -159,6 +170,7 @@ class Init(Interface):
         # put essential configuration into the dataset
         config.set('datalad.xnat.default.url', url, where='dataset', reload=False)
         config.set('datalad.xnat.default.project', project, where='dataset')
+        config.set('datalad.xnat.default.path', path, where='dataset')
 
         ds.save(
             path=ds.pathobj / '.datalad' / 'config',

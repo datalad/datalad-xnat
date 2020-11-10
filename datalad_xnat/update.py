@@ -141,7 +141,7 @@ class Update(Interface):
 
         # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat
-        addurl_dir = ds.pathobj / 'addurl_files'
+        addurl_dir = ds.pathobj / 'code' / 'addurl_files'
         for sub in subs:
             yield from parse_xnat(
                 ds,

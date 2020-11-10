@@ -42,7 +42,7 @@ def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
 
     # create csv table containing subject info & file urls
     table_header = ['subject', 'session', 'scan', 'resource', 'filename', 'url']
-    csv_path = f"addurl_files/{sub}_table.csv"
+    csv_path = f"code/addurl_files/{sub}_table.csv"
     sub_table = ds.pathobj / '{}'.format(csv_path)
 
     # check if table already exists

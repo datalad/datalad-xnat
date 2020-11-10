@@ -166,6 +166,9 @@ class Update(Interface):
                 result_renderer='default',
             )
 
+            # add the csv table to git
+            ds.repo.add(table, git=True)
+
             ds.save(
                 message=f"Update files for subject {sub}",
                 recursive=True

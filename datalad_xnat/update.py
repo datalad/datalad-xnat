@@ -94,8 +94,8 @@ class Update(Interface):
                 ds=ds,
                 status='impossible',
                 message=(
-                    'clean dataset required to detect changes from command; '
-                    'use `datalad status` to inspect unsaved changes'))
+                    'Clean dataset required; use `datalad status` to inspect '
+                    'unsaved changes'))
             return
 
         # prep for yield

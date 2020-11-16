@@ -15,6 +15,7 @@ import csv
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
+from datalad.interface.results import get_status_dict
 from datalad.support.constraints import (
     EnsureStr,
     EnsureNone,
@@ -85,6 +86,17 @@ class Update(Interface):
             dataset, check_installed=True, purpose='update')
 
         subjects = ensure_list(subjects)
+
+        # require a clean dataset
+        if ds.repo.dirty:
+            yield get_status_dict(
+                'update',
+                ds=ds,
+                status='impossible',
+                message=(
+                    'clean dataset required to detect changes from command; '
+                    'use `datalad status` to inspect unsaved changes'))
+            return
 
         # prep for yield
         res = dict(
@@ -165,9 +177,6 @@ class Update(Interface):
                 cfg_proc='xnat_dataset',
                 result_renderer='default',
             )
-
-            # add the csv table to git
-            ds.repo.add(table, git=True)
 
             ds.save(
                 message=f"Update files for subject {sub}",

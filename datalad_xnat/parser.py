@@ -69,6 +69,13 @@ def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
                         url = f"{xnat_url}/data/projects/{xnat_project}/subjects/{sub}/experiments/{experiment}/scans/{scan}/resources/{resource}/files/{filename}"
                         # create line for each file with necessary subject info
                         fh.writerow([sub, experiment, scan, resource, filename, url])
+
+    ds.save(
+        path=sub_table,
+        message=f"Add file url table for {sub}",
+        to_git=True
+        )
+
     yield dict(
         res,
         status='ok',

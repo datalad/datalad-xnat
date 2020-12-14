@@ -1,18 +1,18 @@
 command_suite = (
     'XNAT server access support',
     [
-#        (
-#            'datalad_xnat.init',
-#            'Init',
-#            'xnat-init',
-#            'xnat_init',
-#        ),
-#        (
-#            'datalad_xnat.update',
-#            'Update',
-#            'xnat-update',
-#            'xnat_update',
-#        ),
+        (
+            'datalad_xnat.init',
+            'Init',
+            'xnat-init',
+            'xnat_init',
+        ),
+        (
+            'datalad_xnat.update',
+            'Update',
+            'xnat-update',
+            'xnat_update',
+        ),
     ]
 )
 

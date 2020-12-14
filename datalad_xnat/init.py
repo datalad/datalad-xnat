@@ -23,6 +23,7 @@ from datalad.support.param import Parameter
 from datalad.utils import (
     ensure_list,
     quote_cmdlinearg,
+    with_pathsep,
 )
 
 from datalad.distribution.dataset import (
@@ -31,7 +32,7 @@ from datalad.distribution.dataset import (
     require_dataset,
 )
 from datalad.downloaders.credentials import UserPassword
-
+from urllib.parse import urlparse
 
 __docformat__ = 'restructuredtext'
 
@@ -64,6 +65,15 @@ class Init(Interface):
             args=("-p", "--project",),
             doc="""name of an XNAT project to track""",
         ),
+        path=Parameter(
+            args=("-O", "--path",),
+            doc="""Specify the directory structure for the downloaded files, and
+            if/where a subdataset should be created.
+            To include the subject, session, or scan values, use the following
+            format: {subject}/{session}/{scan}/
+            To insert a subdataset at a specific directory level use '//':
+            {subject}/{session}//{scan}/""",
+        ),
         force=Parameter(
             args=("-f", "--force",),
             doc="""force (re-)initialization""",
@@ -72,13 +82,14 @@ class Init(Interface):
     @staticmethod
     @datasetmethod(name='xnat_init')
     @eval_results
-    def __call__(url, project=None, force=False, dataset=None):
+    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, dataset=None):
         from pyxnat import Interface as XNATInterface
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
 
         config = ds.config
+        path = with_pathsep(path)
 
         # prep for yield
         res = dict(
@@ -89,10 +100,12 @@ class Init(Interface):
             refds=ds.path,
         )
 
-        # obtain user credentials, use provided URL as identifier
+        # obtain user credentials, use simplified/stripped URL as identifier
         # given we don't have more knowledge than the user, do not
         # give a `url` to provide hints on how to obtain credentials
-        cred = UserPassword(name=url, url=None)()
+        parsed_url = urlparse(url)
+        no_proto_url='{}{}'.format(parsed_url.netloc, parsed_url.path).replace(' ', '')
+        cred = UserPassword(name=no_proto_url, url=None)()
 
         xn = XNATInterface(server=url, **cred)
 
@@ -117,7 +130,7 @@ class Init(Interface):
             projects = xn.select.projects().get()
             ui.message(
                 'No project name specified. The following projects are '
-                'available on {}:'.format(url))
+                'available on {} for user {}:'.format(url, cred['user']))
             for p in sorted(projects):
                 # list and prep for C&P
                 # TODO multi-column formatting?
@@ -143,10 +156,33 @@ class Init(Interface):
         lgr.info('XNAT reports %i subjects currently on-record for project %s',
                  nsubj, project)
 
+        # check if dataset already initialized
+        auth_dir = ds.pathobj / '.datalad' / 'providers'
+        if auth_dir.exists() and not force:
+            yield dict(
+                res,
+                status='error',
+                message='Dataset found already initialized, '
+                        'use `force` to reinitialize',
+            )
+            return
+
         # put essential configuration into the dataset
-        config.set('datalad.
+        config.set('datalad.xnat.default.url', url, where='dataset', reload=False)
+        config.set('datalad.xnat.default.project', project, where='dataset')
+        config.set('datalad.xnat.default.path', path, where='dataset')
+
+        ds.save(
+            path=ds.pathobj / '.datalad' / 'config',
+            to_git=True,
+            message="Configure default XNAT url and project",
+        )
+
+        # Configure XNAT access authentication
+        ds.run_procedure(spec='cfg_xnat_dataset')
 
         yield dict(
             res,
             status='ok',
         )
+        return

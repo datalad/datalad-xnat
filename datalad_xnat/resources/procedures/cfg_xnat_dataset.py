@@ -46,6 +46,9 @@ import sys
 
 from datalad.api import Dataset
 from urllib.parse import urlparse
+from datalad.support.annexrepo import AnnexRepo
+from datalad.consts import DATALAD_SPECIAL_REMOTE
+from datalad.support.exceptions import (RemoteNotAvailableError)
 
 ds = Dataset(sys.argv[1])
 
@@ -99,3 +102,12 @@ ds.save(
     to_git=True,
     message="Configure XNAT access authentication",
 )
+
+# enable datalad special remote
+annex = AnnexRepo(ds.path)
+try:
+    annex.is_special_annex_remote(DATALAD_SPECIAL_REMOTE)
+except RemoteNotAvailableError:
+    annex.init_remote(DATALAD_SPECIAL_REMOTE,
+        ['encryption=none', 'type=external', 'externaltype=%s' % DATALAD_SPECIAL_REMOTE,
+            'autoenable=true'])

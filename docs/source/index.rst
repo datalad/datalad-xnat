@@ -15,7 +15,8 @@ High-level API commands
 .. autosummary::
    :toctree: generated
 
-   hello_cmd
+   xnat_init
+   xnat_update
 
 
 Command line reference
@@ -24,7 +25,8 @@ Command line reference
 .. toctree::
    :maxdepth: 1
 
-   generated/man/datalad-hello-cmd
+   generated/man/datalad-xnat-init
+   generated/man/datalad-xnat-update
 
 
 Indices and tables

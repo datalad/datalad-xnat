@@ -1,6 +1,6 @@
 # DataLad extension tracking data in an XNAT server
 
-[![GitHub release](https://img.shields.io/github/release/datalad/datalad-xnat.svg)](https://GitHub.com/datalad/datalad-xnat/releases/) [![PyPI version fury.io](https://badge.fury.io/py/datalad-xnat.svg)](https://pypi.python.org/pypi/datalad-xnat/)
+[![GitHub release](https://img.shields.io/github/release/datalad/datalad-xnat.svg)](https://GitHub.com/datalad/datalad-xnat/releases/) [![PyPI version fury.io](https://badge.fury.io/py/datalad-xnat.svg)](https://pypi.python.org/pypi/datalad-xnat/) [![Build status](https://ci.appveyor.com/api/projects/status/7pug8bjjgdcvsfn7/branch/master?svg=true)](https://ci.appveyor.com/project/mih/datalad-xnat/branch/master) [![codecov.io](https://codecov.io/github/datalad/datalad-xnat/coverage.svg?branch=master)](https://codecov.io/github/datalad/datalad-xnat?branch=master) [![crippled-filesystems](https://github.com/datalad/datalad-xnat/workflows/crippled-filesystems/badge.svg)](https://github.com/datalad/datalad-xnat/actions?query=workflow%3Acrippled-filesystems)
 
 This software is a [DataLad](http://datalad.org) extension that equips DataLad
 with a set of commands to track XNAT projects.
@@ -58,4 +58,3 @@ This development was supported by European Union’s Horizon 2020 research and
 innovation programme under grant agreement [VirtualBrainCloud
 (H2020-EU.3.1.5.3, grant no.
 826421)](https://cordis.europa.eu/project/id/826421).
-

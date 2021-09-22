@@ -58,4 +58,3 @@ This development was supported by European Union’s Horizon 2020 research and
 innovation programme under grant agreement [VirtualBrainCloud
 (H2020-EU.3.1.5.3, grant no.
 826421)](https://cordis.europa.eu/project/id/826421).
-

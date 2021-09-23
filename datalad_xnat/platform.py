@@ -16,11 +16,34 @@ from urllib.parse import (
 )
 
 from datalad.downloaders.credentials import UserPassword
+from datalad.support.constraints import (
+    EnsureNone,
+    EnsureStr,
+)
+from datalad.support.param import Parameter
 
 lgr = logging.getLogger('datalad.xnat.platform')
 
 
 class _XNAT(object):
+
+    cmd_params = dict(
+        credential=Parameter(
+            args=('--credential',),
+            constraints=EnsureStr() | EnsureNone(),
+            metavar='NAME',
+            doc="""name of the credential providing a user/password combination
+            to be used for authentication. The special value 'anonymous' will
+            cause no credentials to be used, and all XNAT requests to be
+            performed anonymously. The credential can be supplied via
+            configuration settings 'datalad.credential.<name>.{user|password}',
+            or environment variables DATALAD_CREDENTIAL_<NAME>_{USER|PASSWORD},
+            or will be queried from the active credential store using the
+            provided name. If none is provided, the host-part of the XNAT URL
+            is used as a name (e.g. 'https://central.xnat.org' ->
+            'central.xnat.org')"""),
+    )
+
     def __init__(self, url, credential):
         from pyxnat import Interface as XNATInterface
 

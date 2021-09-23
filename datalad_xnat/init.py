@@ -29,6 +29,7 @@ from datalad.distribution.dataset import (
     EnsureDataset,
     require_dataset,
 )
+from .platform import _XNAT
 
 __docformat__ = 'restructuredtext'
 
@@ -74,11 +75,12 @@ class Init(Interface):
             args=("-f", "--force",),
             doc="""force (re-)initialization""",
             action='store_true'),
+        **_XNAT.cmd_params
     )
     @staticmethod
     @datasetmethod(name='xnat_init')
     @eval_results
-    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, dataset=None):
+    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, credential=None, dataset=None):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
@@ -95,9 +97,7 @@ class Init(Interface):
             refds=ds.path,
         )
 
-        from .platform import _XNAT
-        # TODO support credential parameter
-        platform = _XNAT(url, credential=None)
+        platform = _XNAT(url, credential=credential)
 
         if project is None:
             from datalad.ui import ui
@@ -105,7 +105,9 @@ class Init(Interface):
             ui.message(
                 'No project name specified. The following projects are '
                 'available on {} for user {}:'.format(
-                    url, platform.cred['user']))
+                    url,
+                    'anonymous' if platform.cred['anonymous']
+                    else platform.cred['user']))
             for p in sorted(projects):
                 # list and prep for C&P
                 # TODO multi-column formatting?

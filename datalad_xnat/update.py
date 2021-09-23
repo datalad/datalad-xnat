@@ -37,6 +37,8 @@ from datalad.distribution.dataset import (
 from datalad.downloaders.credentials import UserPassword
 from urllib.parse import urlparse
 
+from .platform import _XNAT
+
 #import datalad.plugin.addurls
 
 __docformat__ = 'restructuredtext'
@@ -75,11 +77,13 @@ class Update(Interface):
             args=("-f", "--force",),
             doc="""force (re-)building the addurl tables""",
             action='store_true'),
+        **_XNAT.cmd_params
     )
+
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects='list', dataset=None, ifexists=None, force=False):
+    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, force=False):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
@@ -112,9 +116,7 @@ class Update(Interface):
         xnat_project = ds.config.get('{}.project'.format(cfg_section))
         file_path = ds.config.get('{}.path'.format(cfg_section))
 
-        from .platform import _XNAT
-        # TODO support credential parameter
-        platform = _XNAT(xnat_url, credential='anonymous')
+        platform = _XNAT(xnat_url, credential=credential)
 
         # provide subject list
         if 'list' in subjects:

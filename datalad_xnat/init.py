@@ -155,8 +155,9 @@ class Init(Interface):
             message="Configure default XNAT url and project",
         )
 
-        # Configure XNAT access authentication
-        ds.run_procedure(spec='cfg_xnat_dataset')
+        if not platform.cred['anonymous']:
+            # Configure XNAT access authentication
+            ds.run_procedure(spec='cfg_xnat_dataset')
 
         yield dict(
             res,

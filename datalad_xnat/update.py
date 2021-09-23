@@ -173,7 +173,8 @@ class Update(Interface):
                 table, '{url}', filenameformat,
                 ifexists=ifexists,
                 save=False,
-                cfg_proc='xnat_dataset',
+                cfg_proc=None if platform.cred['anonymous']
+                else 'xnat_dataset',
                 result_renderer='default',
             )
 

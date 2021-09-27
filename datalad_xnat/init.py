@@ -16,12 +16,10 @@ from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
 from datalad.support.constraints import (
-    EnsureStr,
     EnsureNone,
 )
 from datalad.support.param import Parameter
 from datalad.utils import (
-    ensure_list,
     quote_cmdlinearg,
     with_pathsep,
 )
@@ -31,8 +29,7 @@ from datalad.distribution.dataset import (
     EnsureDataset,
     require_dataset,
 )
-from datalad.downloaders.credentials import UserPassword
-from urllib.parse import urlparse
+from .platform import _XNAT
 
 __docformat__ = 'restructuredtext'
 
@@ -78,12 +75,12 @@ class Init(Interface):
             args=("-f", "--force",),
             doc="""force (re-)initialization""",
             action='store_true'),
+        **_XNAT.cmd_params
     )
     @staticmethod
     @datasetmethod(name='xnat_init')
     @eval_results
-    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, dataset=None):
-        from pyxnat import Interface as XNATInterface
+    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, credential=None, dataset=None):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
@@ -100,37 +97,17 @@ class Init(Interface):
             refds=ds.path,
         )
 
-        # obtain user credentials, use simplified/stripped URL as identifier
-        # given we don't have more knowledge than the user, do not
-        # give a `url` to provide hints on how to obtain credentials
-        parsed_url = urlparse(url)
-        no_proto_url='{}{}'.format(parsed_url.netloc, parsed_url.path).replace(' ', '')
-        cred = UserPassword(name=no_proto_url, url=None)()
-
-        xn = XNATInterface(server=url, **cred)
-
-        # now we make a simple request to obtain the server version
-        # we don't care much, but if the URL or the credentials are wrong
-        # we will not get to see one
-        try:
-            xnat_version = xn.version()
-            lgr.debug("XNAT server version is %s", xnat_version)
-        except Exception as e:
-            yield dict(
-                res,
-                status='error',
-                message=(
-                    'Failed to access the XNAT server. Full error:\n%s',
-                    e),
-            )
-            return
+        platform = _XNAT(url, credential=credential)
 
         if project is None:
             from datalad.ui import ui
-            projects = xn.select.projects().get()
+            projects = platform.xn.select.projects().get()
             ui.message(
                 'No project name specified. The following projects are '
-                'available on {} for user {}:'.format(url, cred['user']))
+                'available on {} for user {}:'.format(
+                    url,
+                    'anonymous' if platform.cred['anonymous']
+                    else platform.cred['user']))
             for p in sorted(projects):
                 # list and prep for C&P
                 # TODO multi-column formatting?
@@ -138,7 +115,7 @@ class Init(Interface):
             return
 
         # query the specified project to make sure it exists and is accessible
-        proj = xn.select.project(project)
+        proj = platform.xn.select.project(project)
 
         try:
             nsubj = len(proj.subjects().get())
@@ -178,8 +155,9 @@ class Init(Interface):
             message="Configure default XNAT url and project",
         )
 
-        # Configure XNAT access authentication
-        ds.run_procedure(spec='cfg_xnat_dataset')
+        if not platform.cred['anonymous']:
+            # Configure XNAT access authentication
+            ds.run_procedure(spec='cfg_xnat_dataset')
 
         yield dict(
             res,

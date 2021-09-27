@@ -37,6 +37,8 @@ from datalad.distribution.dataset import (
 from datalad.downloaders.credentials import UserPassword
 from urllib.parse import urlparse
 
+from .platform import _XNAT
+
 #import datalad.plugin.addurls
 
 __docformat__ = 'restructuredtext'
@@ -75,12 +77,13 @@ class Update(Interface):
             args=("-f", "--force",),
             doc="""force (re-)building the addurl tables""",
             action='store_true'),
+        **_XNAT.cmd_params
     )
+
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects='list', dataset=None, ifexists=None, force=False):
-        from pyxnat import Interface as XNATInterface
+    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, force=False):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
@@ -113,16 +116,12 @@ class Update(Interface):
         xnat_project = ds.config.get('{}.project'.format(cfg_section))
         file_path = ds.config.get('{}.path'.format(cfg_section))
 
-        # obtain user credentials
-        parsed_url = urlparse(xnat_url)
-        no_proto_url='{}{}'.format(parsed_url.netloc, parsed_url.path).replace(' ', '')
-        cred = UserPassword(name=no_proto_url, url=None)()
-        xn = XNATInterface(server=xnat_url, **cred)
+        platform = _XNAT(xnat_url, credential=credential)
 
         # provide subject list
         if 'list' in subjects:
             from datalad.ui import ui
-            subs = xn.select.project(xnat_project).subjects().get()
+            subs = platform.xn.select.project(xnat_project).subjects().get()
             ui.message(
                 'The following subjects are available for XNAT '
                 'project {}:'.format(xnat_project))
@@ -138,7 +137,7 @@ class Update(Interface):
             from datalad.ui import ui
             subs = []
             for s in subjects:
-                sub = xn.select.project(xnat_project).subject(s)
+                sub = platform.xn.select.project(xnat_project).subject(s)
                 nexp = len(sub.experiments().get())
                 if nexp > 0:
                     subs.append(s)
@@ -149,7 +148,7 @@ class Update(Interface):
                     return
         else:
             # if all, get list of all subjects
-            subs = xn.select.project(xnat_project).subjects().get()
+            subs = platform.xn.select.project(xnat_project).subjects().get()
 
         # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat
@@ -159,7 +158,7 @@ class Update(Interface):
                 ds,
                 sub=sub,
                 force=force,
-                xn=xn,
+                xn=platform.xn,
                 xnat_url=xnat_url,
                 xnat_project=xnat_project,
             )
@@ -174,7 +173,8 @@ class Update(Interface):
                 table, '{url}', filenameformat,
                 ifexists=ifexists,
                 save=False,
-                cfg_proc='xnat_dataset',
+                cfg_proc=None if platform.cred['anonymous']
+                else 'xnat_dataset',
                 result_renderer='default',
             )
 

@@ -10,6 +10,7 @@
 """
 
 import logging
+import requests
 from urllib.parse import (
     urljoin,
     urlparse,
@@ -26,6 +27,14 @@ lgr = logging.getLogger('datalad.xnat.platform')
 
 
 class _XNAT(object):
+    api_endpoints = dict(
+        session_token='/data/JSESSION',
+        projects='/data/projects?format=json',
+        subjects='/data/projects/{project}/subjects?format=json',
+        experiments='/data/projects/{project}/subjects/{subject}/experiments?format=json',
+        scans='/data/experiments/{experiment}/scans?format=json',
+        files='/data/experiments/{experiment}/scans/{scan}/files?format=json',
+    )
 
     cmd_params = dict(
         credential=Parameter(
@@ -45,13 +54,15 @@ class _XNAT(object):
     )
 
     def __init__(self, url, credential):
-        from pyxnat import Interface as XNATInterface
+        self.url = url
 
+        session = requests.Session()
         if credential is None:
             credential = urlparse(url).netloc
 
         if credential == 'anonymous':
             cred = dict(anonymous=True, user=None, password=None)
+            auth = None
         else:
             try:
                 auth = UserPassword(
@@ -69,16 +80,12 @@ class _XNAT(object):
             cred = dict(anonymous=False,
                         user=auth['user'] or None,
                         password=auth['password'] or None)
+            session.auth(auth['user'], auth['password'])
 
+        # now check of auth works (if any is needed)
         # TODO check that we have anonymous OR user/pass
-        xn = XNATInterface(server=url, **cred)
-
-        # now we make a simple request to obtain the server version
-        # we don't care much, but if the URL or the credentials are wrong
-        # we will not get to see one
         try:
-            xnat_version = xn.version()
-            lgr.debug("XNAT server version is %s", xnat_version)
+            session.post(self._get_api('session_token')).raise_for_status()
         except Exception as e:
             # TODO this exception as enough info to actually do meaningful
             # error handling
@@ -86,5 +93,58 @@ class _XNAT(object):
                 'Failed to access the XNAT server. Full error:\n%s', e) from e
 
         # TODO make private
-        self.xn = xn
         self.cred = cred
+        self._session = session
+
+    def get_projects(self):
+        """Returns a list with project identifiers"""
+        return [
+            r['ID']
+            for r in self._unwrap(self._session.get(
+                self._get_api('projects')))
+        ]
+
+    def get_subjects(self, project):
+        """Return a list of subject IDs available in a project"""
+        return [
+            r['ID']
+            for r in self._unwrap(self._session.get(
+                self._get_api('subjects', project=project)))
+        ]
+
+    def get_nsubjs(self, project):
+        """Return the number of subjects available in a project"""
+        return len(self.get_subjects(project))
+
+    def get_experiments(self, project, subject):
+        """Return a list of experiment IDs available for a project's subject"""
+        return [
+            r['ID']
+            for r in self._unwrap(self._session.get(
+                self._get_api('experiments',
+                              project=project,
+                              subject=subject)))
+        ]
+
+    def get_scans(self, experiment):
+        """Return a list of scan IDs available for an experiment"""
+        return [
+            r['ID']
+            for r in self._unwrap(self._session.get(
+                self._get_api('scans', experiment=experiment)))
+        ]
+
+    def get_files(self, experiment, scan):
+        """Return a list of file records for a scan in an experiment"""
+        return self._unwrap(self._session.get(
+            self._get_api('files', experiment=experiment, scan=scan)))
+
+    def _get_api(self, id, **kwargs):
+        ep = self.api_endpoints[id]
+        if kwargs:
+            ep = ep.format(**kwargs)
+        return urljoin(self.url, ep)
+
+    def _unwrap(self, response):
+        return response.json().get('ResultSet', {}).get('Result')
+

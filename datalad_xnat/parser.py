@@ -11,12 +11,12 @@
 
 import logging
 import csv
-from datalad.utils import quote_cmdlinearg
+from urllib.parse import urljoin
 
 lgr = logging.getLogger('datalad.xnat.parse')
 
 
-def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
+def parse_xnat(ds, sub, force, platform, xnat_project):
     """Lookup specified subject for configured XNAT project and build csv table.
 
     Parameters
@@ -26,9 +26,8 @@ def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
         The subject to build a csv table for.
     force: str
         Re-build csv table if it already exists.
-    xn: str
+    platform: str
         XNAT instance
-    xnat_url: str
     xnat_project: str
     """
 
@@ -41,7 +40,7 @@ def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
     )
 
     # create csv table containing subject info & file urls
-    table_header = ['subject', 'session', 'scan', 'resource', 'filename', 'url']
+    table_header = ['subject', 'session', 'scan', 'filename', 'url']
     sub_table = ds.pathobj / 'code' / 'addurl_files' / f'{sub}_table.csv'
 
     # check if table already exists
@@ -61,20 +60,21 @@ def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
         fh = csv.writer(outfile, delimiter=',')
         fh.writerow(table_header)
         lgr.info('Querying info for subject %s', sub)
-        xnsub = xn.select.project(xnat_project).subject(sub)
-        for experiment in xnsub.experiments().get():
-            for scan in xnsub.experiment(experiment).scans().get():
-                for resource in xnsub.experiment(experiment).scan(scan).resources().get():
-                    for filename in xnsub.experiment(experiment).scan(scan).resource(resource).files().get():
-                        url = f"{xnat_url}/data/projects/{xnat_project}/subjects/{sub}/experiments/{experiment}/scans/{scan}/resources/{resource}/files/{filename}"
-                        # create line for each file with necessary subject info
-                        fh.writerow([sub, experiment, scan, resource, filename, url])
+        for experiment in platform.get_experiments(xnat_project, sub):
+            for scan in platform.get_scans(experiment):
+                for file_rec in platform.get_files(experiment, scan):
+                    # TODO the file size is at file_rec['Size'], could be used
+                    # for progress reporting, maybe
+                    filename = file_rec['Name']
+                    url = urljoin(platform.url, file_rec['URI'])
+                    # create line for each file with necessary subject info
+                    fh.writerow([sub, experiment, scan, filename, url])
 
     ds.save(
         path=sub_table,
         message=f"Add file url table for {sub}",
         to_git=True
-        )
+    )
 
     yield dict(
         res,

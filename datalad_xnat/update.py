@@ -10,19 +10,16 @@
 """
 
 import logging
-import csv
 
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
 from datalad.interface.results import get_status_dict
 from datalad.support.constraints import (
-    EnsureStr,
     EnsureNone,
     EnsureChoice,
 )
 from datalad.support.param import Parameter
-from datalad.support.exceptions import CommandError
 from datalad.utils import (
     ensure_list,
     quote_cmdlinearg,
@@ -34,12 +31,8 @@ from datalad.distribution.dataset import (
     require_dataset,
 )
 
-from datalad.downloaders.credentials import UserPassword
-from urllib.parse import urlparse
-
 from .platform import _XNAT
 
-#import datalad.plugin.addurls
 
 __docformat__ = 'restructuredtext'
 
@@ -121,7 +114,7 @@ class Update(Interface):
         # provide subject list
         if 'list' in subjects:
             from datalad.ui import ui
-            subs = platform.xn.select.project(xnat_project).subjects().get()
+            subs = platform.get_subjects(xnat_project)
             ui.message(
                 'The following subjects are available for XNAT '
                 'project {}:'.format(xnat_project))
@@ -133,12 +126,14 @@ class Update(Interface):
             return
 
         # query the specified subject(s) to make sure it exists and is accessible
+        # TODO we culd just take the input subject list at face-value
+        # and report on all subjects for whom we got no data, instead of one
+        # upfront query per subject
         if 'all' not in subjects:
             from datalad.ui import ui
             subs = []
             for s in subjects:
-                sub = platform.xn.select.project(xnat_project).subject(s)
-                nexp = len(sub.experiments().get())
+                nexp = len(platform.get_experiments(xnat_project, s))
                 if nexp > 0:
                     subs.append(s)
                 else:
@@ -148,7 +143,7 @@ class Update(Interface):
                     return
         else:
             # if all, get list of all subjects
-            subs = platform.xn.select.project(xnat_project).subjects().get()
+            subs = platform.get_subjects(xnat_project)
 
         # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat
@@ -158,8 +153,7 @@ class Update(Interface):
                 ds,
                 sub=sub,
                 force=force,
-                xn=platform.xn,
-                xnat_url=xnat_url,
+                platform=platform,
                 xnat_project=xnat_project,
             )
 

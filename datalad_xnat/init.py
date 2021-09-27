@@ -103,7 +103,7 @@ class Init(Interface):
 
         if project is None:
             from datalad.ui import ui
-            projects = platform.xn.select.projects().get()
+            projects = platform.get_projects()
             ui.message(
                 'No project name specified. The following projects are '
                 'available on {} for user {}:'.format(
@@ -117,10 +117,10 @@ class Init(Interface):
             return
 
         # query the specified project to make sure it exists and is accessible
-        proj = platform.xn.select.project(project)
-
         try:
-            nsubj = len(proj.subjects().get())
+            # TODO for big projects this may not be the cheapest possible query
+            # that ensures existence of the project
+            nsubj = platform.get_nsubjs(project)
         except Exception as e:
             yield dict(
                 res,

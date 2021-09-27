@@ -165,12 +165,12 @@ class Update(Interface):
 
             # add file urls for subject
             lgr.info('Downloading files for subject %s', sub)
-            table = f"{addurl_dir}/{sub}_table.csv"
+            table = addurl_dir / f'{sub}_table.csv'
             # this corresponds to the header field 'filename' in the csv table
             filename = '{filename}'
             filenameformat = f"{file_path}{filename}"
             ds.addurls(
-                table, '{url}', filenameformat,
+                str(table), '{url}', filenameformat,
                 ifexists=ifexists,
                 save=False,
                 cfg_proc=None if platform.cred['anonymous']

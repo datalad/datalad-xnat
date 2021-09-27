@@ -42,12 +42,13 @@ def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
 
     # create csv table containing subject info & file urls
     table_header = ['subject', 'session', 'scan', 'resource', 'filename', 'url']
-    csv_path = f"code/addurl_files/{sub}_table.csv"
-    sub_table = ds.pathobj / '{}'.format(csv_path)
+    sub_table = ds.pathobj / 'code' / 'addurl_files' / f'{sub}_table.csv'
 
     # check if table already exists
     if sub_table.exists() and not force:
-        lgr.info('%s already exists. To query latest subject info, use `force`.', csv_path)
+        lgr.info(
+            '%s already exists. To query latest subject info, use `force`.',
+            sub_table)
         return
         #TODO: provide more info about existing file
     elif sub_table.exists() and force:
@@ -56,10 +57,9 @@ def parse_xnat(ds, sub, force, xn, xnat_url, xnat_project):
     sub_table.parent.mkdir(parents=True, exist_ok=True)
 
     # write subject info to file
-    with open(sub_table, 'w') as outfile:
+    with open(sub_table, 'w', newline='', encoding='utf-8') as outfile:
         fh = csv.writer(outfile, delimiter=',')
         fh.writerow(table_header)
-
         lgr.info('Querying info for subject %s', sub)
         xnsub = xn.select.project(xnat_project).subject(sub)
         for experiment in xnsub.experiments().get():

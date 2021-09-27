@@ -86,7 +86,9 @@ class Init(Interface):
             dataset, check_installed=True, purpose='initialization')
 
         config = ds.config
-        path = with_pathsep(path)
+        # TODO needs a better solution, with_pathsep adds a platform pathsep
+        # and ruins everything on windows
+        #path = with_pathsep(path)
 
         # prep for yield
         res = dict(

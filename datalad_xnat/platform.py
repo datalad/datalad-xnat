@@ -10,7 +10,13 @@
 """
 
 import logging
-import requests
+
+from http import HTTPStatus
+from requests import (
+    HTTPError,
+    Session,
+    status_codes,
+)
 from urllib.parse import (
     urlparse,
 )
@@ -23,6 +29,10 @@ from datalad.support.constraints import (
 from datalad.support.param import Parameter
 
 lgr = logging.getLogger('datalad.xnat.platform')
+
+
+# lookup error description based on HTTP error code
+http_error_lookup = {i.value: i.phrase for i in HTTPStatus}
 
 
 class _XNAT(object):
@@ -57,7 +67,7 @@ class _XNAT(object):
         # all URL joining operations require NO trailing slash of the base URL
         self.url = url.rstrip('/')
 
-        session = requests.Session()
+        session = Session()
         if credential is None:
             credential = urlparse(url).netloc
 
@@ -79,15 +89,17 @@ class _XNAT(object):
 
             session.auth = (auth['user'], auth['password'])
 
-        # now check of auth works (if any is needed)
+        # now check if auth works (if any is needed)
         # TODO check that we have anonymous OR user/pass
         try:
             session.post(self._get_api('session_token')).raise_for_status()
+        except HTTPError as e:
+            msg = e.response.reason or http_error_lookup[e.response.status_code]
+            raise RuntimeError("Failed to access the XNAT server. Reason: %s" %
+                               msg) from e
         except Exception as e:
-            # TODO this exception as enough info to actually do meaningful
-            # error handling
             raise RuntimeError(
-                'Failed to access the XNAT server. Full error:\n%s', e) from e
+                'Failed to access the XNAT server. Full error:\n%s' % e) from e
 
         self._session = session
         self._credential_name = credential

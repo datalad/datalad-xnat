@@ -4,3 +4,4 @@ graft _datalad_buildsupport
 graft docs
 prune docs/build
 global-exclude *.py[cod]
+graft datalad_xnat/resources

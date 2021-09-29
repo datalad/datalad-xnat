@@ -1,5 +1,5 @@
-DataLad extension template
-**************************
+DataLad XNAT
+************
 
 .. figure:: _static/git-annex-xnat-logo.png
 

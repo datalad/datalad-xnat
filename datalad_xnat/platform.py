@@ -80,7 +80,7 @@ class _XNAT(object):
             cred = dict(anonymous=False,
                         user=auth['user'] or None,
                         password=auth['password'] or None)
-            session.auth(auth['user'], auth['password'])
+            session.auth = (auth['user'], auth['password'])
 
         # now check of auth works (if any is needed)
         # TODO check that we have anonymous OR user/pass

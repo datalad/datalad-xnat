@@ -10,7 +10,12 @@
 """
 
 import logging
-import requests
+
+from requests import (
+    HTTPError,
+    Session,
+    status_codes,
+)
 from urllib.parse import (
     urljoin,
     urlparse,
@@ -56,7 +61,7 @@ class _XNAT(object):
     def __init__(self, url, credential):
         self.url = url
 
-        session = requests.Session()
+        session = Session()
         if credential is None:
             credential = urlparse(url).netloc
 
@@ -82,15 +87,23 @@ class _XNAT(object):
                         password=auth['password'] or None)
             session.auth = (auth['user'], auth['password'])
 
-        # now check of auth works (if any is needed)
+        # now check if auth works (if any is needed)
         # TODO check that we have anonymous OR user/pass
         try:
             session.post(self._get_api('session_token')).raise_for_status()
+        except HTTPError as e:
+            # TODO: Accessing non-public requests.status_codes._codes isn't nice.
+            #       But the respective LookupDict seems only useful to look up a
+            #       code based on a name, not the other way around. That is,
+            #       however, what we need here to be more informative than
+            #       XNAT's "Client Error for url XXX" for an 401 for example.
+            msg = e.response.reason or \
+                  status_codes._codes[e.response.status_code][0]
+            raise RuntimeError("Failed to access the XNAT server. Reason: %s" %
+                               msg) from e
         except Exception as e:
-            # TODO this exception as enough info to actually do meaningful
-            # error handling
             raise RuntimeError(
-                'Failed to access the XNAT server. Full error:\n%s', e) from e
+                'Failed to access the XNAT server. Full error:\n%s' % e) from e
 
         # TODO make private
         self.cred = cred

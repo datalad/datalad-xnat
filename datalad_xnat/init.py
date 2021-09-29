@@ -15,6 +15,7 @@ import logging
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
+from datalad.interface.results import get_status_dict
 from datalad.support.constraints import (
     EnsureNone,
 )
@@ -25,7 +26,6 @@ from datalad.utils import (
     quote_cmdlinearg,
     with_pathsep,
 )
-
 from datalad.distribution.dataset import (
     datasetmethod,
     EnsureDataset,
@@ -103,13 +103,22 @@ class Init(Interface):
 
         try:
             platform = _XNAT(url, credential=credential)
+        except RuntimeError as e:
+            ce = CapturedException(e)
+            yield get_status_dict(
+                status='error',
+                message=ce.message,
+                exception=ce,
+                **res,
+            )
+            return
         except Exception as e:
             ce = CapturedException(e)
-            yield dict(
-                res,
+            yield get_status_dict(
                 status='error',
                 message=('During authentication the XNAT server sent %s', ce),
-                exception=ce
+                exception=ce,
+                **res,
             )
             return
 

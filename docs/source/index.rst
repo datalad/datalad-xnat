@@ -1,39 +1,40 @@
-DataLad XNAT
-************
+.. include:: ./links.inc
+
+DataLad XNAT: Track and retrieve XNAT projects with DataLad
+-----------------------------------------------------------
+
+This `DataLad extension <handbook.datalad.org/en/latest/r.html?extensions>`_ enables DataLad_ to work with XNAT_ servers.
+Use it to [COMPLETE ME]
 
 .. figure:: _static/git-annex-xnat-logo.png
 
 
-This is a template for creating a `DataLad <http://datalad.org>`__ extension
-that equips DataLad with additional functionality.
+The extension was created during the `Juelich Brain Hackathon 2021 <http://www.csn.fz-juelich.de/inmibi2021/brain-hackathon/>`_ and wouldn't have been possible without a `dedicated team of volunteers <https://github.com/datalad/datalad-xnat#contributors->`_.
+If you want to get in touch or on board as well, please see our :ref:`contributing guidelines <contribute>`.
 
 
-API
-===
 
-High-level API commands
------------------------
+Documentation overview
+^^^^^^^^^^^^^^^^^^^^^^
 
-.. currentmodule:: datalad.api
-.. autosummary::
-   :toctree: generated
+.. toctree::
+   :maxdepth: 2
 
-   xnat_init
-   xnat_update
-
-
-Command line reference
-----------------------
+   intro
+   settingup
+   tutorial
+   contributing
+   acknowledgements
 
 .. toctree::
    :maxdepth: 1
 
-   generated/man/datalad-xnat-init
-   generated/man/datalad-xnat-update
+   cmd
+   api
 
 
 Indices and tables
-==================
+^^^^^^^^^^^^^^^^^^
 
 * :ref:`genindex`
 * :ref:`modindex`

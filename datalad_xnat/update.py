@@ -66,6 +66,15 @@ class Update(Interface):
             doc="""Flag for addurls""",
             constraints=EnsureChoice(None, "overwrite", "skip")
         ),
+        reckless=Parameter(
+            args=("--reckless",),
+            constraints=EnsureChoice(None, "fast",),
+            metavar="fast",
+            doc="""Update the files in a potentially unsafe way.
+            Supported modes are:
+            ["fast"]: No content verification or download. Will only register
+            the urls.""",
+        ),
         force=Parameter(
             args=("-f", "--force",),
             doc="""force (re-)building the addurl tables""",
@@ -76,7 +85,7 @@ class Update(Interface):
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, force=False):
+    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, reckless=None, force=False):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
@@ -166,6 +175,8 @@ class Update(Interface):
             ds.addurls(
                 str(table), '{url}', filenameformat,
                 ifexists=ifexists,
+                fast=True if reckless == 'fast'
+                else False,
                 save=False,
                 cfg_proc=None if platform.cred['anonymous']
                 else 'xnat_dataset',

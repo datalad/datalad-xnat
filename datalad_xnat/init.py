@@ -149,7 +149,7 @@ class Init(Interface):
 
         if project is None:
             from datalad.ui import ui
-            projects = platform.get_projects()
+            projects = platform.get_project_ids()
             ui.message(
                 'No project name specified. The following projects are '
                 'available on {} for user {}:'.format(

@@ -168,28 +168,28 @@ class _XNAT(object):
     def authenticated_user(self):
         return self._session.auth[0] if self._session else None
 
-    def get_projects(self):
+    def get_project_ids(self):
         """Returns a list with project identifiers"""
         return self._unwrap_ids(self._wrapped_get(
             self._get_api('projects')))
 
-    def get_subjects(self, project):
+    def get_subject_ids(self, project):
         """Return a list of subject IDs available in a project"""
         return self._unwrap_ids(self._wrapped_get(
             self._get_api('subjects', project=project)))
 
     def get_nsubjs(self, project):
         """Return the number of subjects available in a project"""
-        return len(self.get_subjects(project))
+        return len(self.get_subject_ids(project))
 
-    def get_experiments(self, project, subject):
+    def get_experiment_ids(self, project, subject):
         """Return a list of experiment IDs available for a project's subject"""
         return self._unwrap_ids(self._wrapped_get(
             self._get_api('experiments',
                           project=project,
                           subject=subject)))
 
-    def get_scans(self, experiment):
+    def get_scan_ids(self, experiment):
         """Return a list of scan IDs available for an experiment"""
         return self._unwrap_ids(self._wrapped_get(
             self._get_api('scans', experiment=experiment)))

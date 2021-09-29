@@ -30,8 +30,6 @@ def test_anonymous_access(path):
         credential='anonymous')
     ds.xnat_update(
         subjects='dcmtest1',
-        # TODO `init` should store this info
-        credential='anonymous',
     )
     # we get the project's payload DICOM in the expected location
     assert_in_results(

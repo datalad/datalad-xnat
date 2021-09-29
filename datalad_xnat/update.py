@@ -108,6 +108,8 @@ class Update(Interface):
         xnat_url = ds.config.get('{}.url'.format(cfg_section))
         xnat_project = ds.config.get('{}.project'.format(cfg_section))
         file_path = ds.config.get('{}.path'.format(cfg_section))
+        if not credential:
+            credential = ds.config.get('{}.credential-name'.format(cfg_section))
 
         platform = _XNAT(xnat_url, credential=credential)
 

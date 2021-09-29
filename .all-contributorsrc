@@ -61,6 +61,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "JanviRaina",
+      "name": "Janvi Raina",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50794649?v=4",
+      "profile": "https://github.com/JanviRaina",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

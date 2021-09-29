@@ -67,18 +67,17 @@ parsed_url = urlparse(xnat_url)
 auth_cfg = """\
 [provider:xnat-{name}]
 url_re = {url}/.*
-credential = {no_proto_url}
+credential = {credential_name}
 authentication_type = {auth_type}
 
-[credential:{no_proto_url}]
+[credential:{credential_name}]
 type = {cred_type}
 """.format(
     name=xnat_cfg_name,
     # strip /, because it is in the template
     url=xnat_url.rstrip('/'),
     # use a simplified/stripped URL as identifier for the credential cfg
-    no_proto_url='{}{}'.format(
-        parsed_url.netloc, parsed_url.path).replace(' ', ''),
+    credential_name=ds.config.obtain('{}.credential-name'.format(cfg_section)),
     auth_type=ds.config.obtain(
         '{}.authentication-type'.format(cfg_section),
         'http_basic_auth'),

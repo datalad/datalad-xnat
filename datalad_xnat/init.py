@@ -147,9 +147,12 @@ class Init(Interface):
             return
 
         # put essential configuration into the dataset
+        # TODO https://github.com/datalad/datalad-xnat/issues/42
         config.set('datalad.xnat.default.url', url, where='dataset', reload=False)
-        config.set('datalad.xnat.default.project', project, where='dataset')
-        config.set('datalad.xnat.default.path', path, where='dataset')
+        config.set('datalad.xnat.default.project', project, where='dataset', reload=False)
+        config.set('datalad.xnat.default.path', path, where='dataset', reload=False)
+        config.set('datalad.xnat.default.credential-name',
+                   platform.credential_name, where='dataset')
 
         ds.save(
             path=ds.pathobj / '.datalad' / 'config',

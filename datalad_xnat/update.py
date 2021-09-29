@@ -125,7 +125,7 @@ class Update(Interface):
         # provide subject list
         if 'list' in subjects:
             from datalad.ui import ui
-            subs = platform.get_subjects(xnat_project)
+            subs = platform.get_subject_ids(xnat_project)
             ui.message(
                 'The following subjects are available for XNAT '
                 'project {}:'.format(xnat_project))
@@ -144,7 +144,7 @@ class Update(Interface):
             from datalad.ui import ui
             subs = []
             for s in subjects:
-                nexp = len(platform.get_experiments(xnat_project, s))
+                nexp = len(platform.get_experiment_ids(xnat_project, s))
                 if nexp > 0:
                     subs.append(s)
                 else:
@@ -154,7 +154,7 @@ class Update(Interface):
                     return
         else:
             # if all, get list of all subjects
-            subs = platform.get_subjects(xnat_project)
+            subs = platform.get_subject_ids(xnat_project)
 
         # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat

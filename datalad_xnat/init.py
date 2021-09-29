@@ -52,7 +52,13 @@ class Init(Interface):
             code_cmd=('datalad xnat-init https://central.xnat.org'
                       '--credential anonymous'),
             code_py=('xnat_init("https://central.xnat.org", '
-                     'credential="anonymous")'))
+                     'credential="anonymous")')),
+        dict(
+            text='Use credentials previously stored as <NAME>',
+            code_cmd=('datalad xnat-init https://central.xnat.org, '
+                      '--credential <NAME>'),
+            code_py=('xnat_init("https://central.xnat.org", '
+                     'credential="<NAME>")')),
     ]
 
     _params_ = dict(

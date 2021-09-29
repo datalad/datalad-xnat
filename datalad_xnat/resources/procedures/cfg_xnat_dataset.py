@@ -74,7 +74,8 @@ authentication_type = {auth_type}
 type = {cred_type}
 """.format(
     name=xnat_cfg_name,
-    url=xnat_url,
+    # strip /, because it is in the template
+    url=xnat_url.rstrip('/'),
     # use a simplified/stripped URL as identifier for the credential cfg
     no_proto_url='{}{}'.format(
         parsed_url.netloc, parsed_url.path).replace(' ', ''),

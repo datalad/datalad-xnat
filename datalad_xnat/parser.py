@@ -65,7 +65,10 @@ def parse_xnat(ds, sub, force, platform, xnat_project):
                     # TODO the file size is at file_rec['Size'], could be used
                     # for progress reporting, maybe
                     filename = file_rec['Name']
-                    url = f"{platform.url}/{file_rec['URI']}"
+                    # URIs should be absolute, but be robust, just in case
+                    url = f"{platform.url}{file_rec['URI']}" \
+                        if file_rec['URI'][0] == '/' \
+                        else f"{platform.url}/{file_rec['URI']}"
                     # create line for each file with necessary subject info
                     fh.writerow([sub, experiment, scan, filename, url])
 

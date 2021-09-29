@@ -1,7 +1,7 @@
 DataLad XNAT
 ************
 
-This is a template for creating a `DataLad <http://datalad.org>`__ extension
+This is a Documentation for Datalad XNAT
 that equips DataLad with additional functionality.
 
 

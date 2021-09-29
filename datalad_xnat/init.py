@@ -47,6 +47,24 @@ class Init(Interface):
             text='Initialize a dataset in the current directory',
             code_cmd='datalad xnat-init http://central.xnat.org:8080',
             code_py='xnat_init("http://central.xnat.org:8080")'),
+        dict(
+            text='Initialize with anonymous access (no credentials used)',
+            code_cmd=('datalad xnat-init https://central.xnat.org '
+                      '--credential anonymous'),
+            code_py=('xnat_init("https://central.xnat.org", '
+                     'credential="anonymous")')),
+        dict(
+            text='Use credentials previously stored as <NAME>',
+            code_cmd=('datalad xnat-init https://central.xnat.org '
+                      '--credential <NAME>'),
+            code_py=('xnat_init("https://central.xnat.org", '
+                     'credential="<NAME>")')),
+        dict(
+            text='Track a specific XNAT project, without credentials',
+            code_cmd=('datalad xnat-init https://central.xnat.org '
+                      '--project Sample_DICOM --credential anonymous'),
+            code_py=('xnat_init("https://central.xnat.org", '
+                     'project="Sample_DICOM", credential="anonymous")')),
     ]
 
     _params_ = dict(

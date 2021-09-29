@@ -18,6 +18,8 @@ from datalad.interface.base import build_doc
 from datalad.support.constraints import (
     EnsureNone,
 )
+
+from datalad.support.exceptions import CapturedException
 from datalad.support.param import Parameter
 from datalad.utils import (
     quote_cmdlinearg,
@@ -99,7 +101,17 @@ class Init(Interface):
             refds=ds.path,
         )
 
-        platform = _XNAT(url, credential=credential)
+        try:
+            platform = _XNAT(url, credential=credential)
+        except Exception as e:
+            ce = CapturedException(e)
+            yield dict(
+                res,
+                status='error',
+                message=('During authentication the XNAT server sent %s', ce),
+                exception=ce
+            )
+            return
 
         if project is None:
             from datalad.ui import ui

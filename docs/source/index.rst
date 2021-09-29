@@ -3,7 +3,7 @@
 DataLad XNAT: Track and retrieve XNAT projects with DataLad
 -----------------------------------------------------------
 
-This `DataLad extension <handbook.datalad.org/en/latest/r.html?extensions>`_ enables DataLad_ to work with XNAT_ servers.
+This is documentation for the `DataLad extension <handbook.datalad.org/en/latest/r.html?extensions>`_, ``datalad-xnat``, that equips DataLad_ with additional functionality to work with XNAT_ servers.
 Use it to [COMPLETE ME]
 
 .. figure:: _static/git-annex-xnat-logo.png

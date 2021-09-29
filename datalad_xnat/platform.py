@@ -12,7 +12,6 @@
 import logging
 import requests
 from urllib.parse import (
-    urljoin,
     urlparse,
 )
 
@@ -27,13 +26,14 @@ lgr = logging.getLogger('datalad.xnat.platform')
 
 
 class _XNAT(object):
+    # URL must not have a leading slash
     api_endpoints = dict(
-        session_token='/data/JSESSION',
-        projects='/data/projects?format=json',
-        subjects='/data/projects/{project}/subjects?format=json',
-        experiments='/data/projects/{project}/subjects/{subject}/experiments?format=json',
-        scans='/data/experiments/{experiment}/scans?format=json',
-        files='/data/experiments/{experiment}/scans/{scan}/files?format=json',
+        session_token='data/JSESSION',
+        projects='data/projects?format=json',
+        subjects='data/projects/{project}/subjects?format=json',
+        experiments='data/projects/{project}/subjects/{subject}/experiments?format=json',
+        scans='data/experiments/{experiment}/scans?format=json',
+        files='data/experiments/{experiment}/scans/{scan}/files?format=json',
     )
 
     cmd_params = dict(
@@ -54,7 +54,8 @@ class _XNAT(object):
     )
 
     def __init__(self, url, credential):
-        self.url = url
+        # all URL joining operations require NO trailing slash of the base URL
+        self.url = url.rstrip('/')
 
         session = requests.Session()
         if credential is None:
@@ -66,7 +67,7 @@ class _XNAT(object):
             try:
                 auth = UserPassword(
                     credential,
-                    url=urljoin(url, 'app/template/Register.vm'),
+                    url=f'{url}/app/template/Register.vm',
                 )()
             except Exception as e:
                 lgr.debug('Credential retrieval failed: %s', e)
@@ -134,7 +135,7 @@ class _XNAT(object):
         ep = self.api_endpoints[id]
         if kwargs:
             ep = ep.format(**kwargs)
-        return urljoin(self.url, ep)
+        return f'{self.url}/{ep}'
 
     def _unwrap(self, response):
         return response.json().get('ResultSet', {}).get('Result')

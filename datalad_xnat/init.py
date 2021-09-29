@@ -30,7 +30,10 @@ from datalad.distribution.dataset import (
     EnsureDataset,
     require_dataset,
 )
-from .platform import _XNAT
+from .platform import (
+    _XNAT,
+    XNATRequestError
+)
 
 __docformat__ = 'restructuredtext'
 
@@ -125,7 +128,7 @@ class Init(Interface):
 
         try:
             platform = _XNAT(url, credential=credential)
-        except RuntimeError as e:
+        except XNATRequestError as e:
             ce = CapturedException(e)
             yield get_status_dict(
                 status='error',

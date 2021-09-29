@@ -13,7 +13,6 @@ The extension was created during the `Juelich Brain Hackathon 2021 <http://www.c
 If you want to get in touch or on board as well, please see our :ref:`contributing guidelines <contribute>`.
 
 
-
 Documentation overview
 ^^^^^^^^^^^^^^^^^^^^^^
 

@@ -13,6 +13,12 @@ command_suite = (
             'xnat-update',
             'xnat_update',
         ),
+        (
+            'datalad_xnat.query',
+            'Query',
+            'xnat-query',
+            'xnat_query',
+        ),
     ]
 )
 

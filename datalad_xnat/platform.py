@@ -61,7 +61,6 @@ class _XNAT(object):
             credential = urlparse(url).netloc
 
         if credential == 'anonymous':
-            cred = dict(anonymous=True, user=None, password=None)
             auth = None
         else:
             try:
@@ -77,9 +76,6 @@ class _XNAT(object):
                     f'Authorization required for {self.fullname}, '
                     f'cannot find token for a credential {credential}.') from e
 
-            cred = dict(anonymous=False,
-                        user=auth['user'] or None,
-                        password=auth['password'] or None)
             session.auth = (auth['user'], auth['password'])
 
         # now check of auth works (if any is needed)
@@ -92,9 +88,16 @@ class _XNAT(object):
             raise RuntimeError(
                 'Failed to access the XNAT server. Full error:\n%s', e) from e
 
-        # TODO make private
-        self.cred = cred
         self._session = session
+        self._credential_name = credential
+
+    @property
+    def credential_name(self):
+        return self._credential_name
+
+    @property
+    def authenticated_user(self):
+        return self._session.auth[0] if self._session else None
 
     def get_projects(self):
         """Returns a list with project identifiers"""

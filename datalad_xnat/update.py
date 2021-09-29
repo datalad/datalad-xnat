@@ -167,7 +167,7 @@ class Update(Interface):
                 str(table), '{url}', filenameformat,
                 ifexists=ifexists,
                 save=False,
-                cfg_proc=None if platform.cred['anonymous']
+                cfg_proc=None if platform.credential_name == 'anonymous'
                 else 'xnat_dataset',
                 result_renderer='default',
             )

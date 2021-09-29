@@ -108,8 +108,8 @@ class Init(Interface):
                 'No project name specified. The following projects are '
                 'available on {} for user {}:'.format(
                     url,
-                    'anonymous' if platform.cred['anonymous']
-                    else platform.cred['user']))
+                    'anonymous' if platform.credential_name == 'anonymous'
+                    else platform.authenticated_user))
             for p in sorted(projects):
                 # list and prep for C&P
                 # TODO multi-column formatting?
@@ -157,7 +157,7 @@ class Init(Interface):
             message="Configure default XNAT url and project",
         )
 
-        if not platform.cred['anonymous']:
+        if not platform.credential_name == 'anonymous':
             # Configure XNAT access authentication
             ds.run_procedure(spec='cfg_xnat_dataset')
 

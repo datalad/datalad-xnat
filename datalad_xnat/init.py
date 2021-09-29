@@ -92,7 +92,6 @@ class Init(Interface):
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
 
-        config = ds.config
         # TODO needs a better solution, with_pathsep adds a platform pathsep
         # and ruins everything on windows
         #path = with_pathsep(path)
@@ -172,22 +171,7 @@ class Init(Interface):
             )
             return
 
-        # put essential configuration into the dataset
-        # TODO https://github.com/datalad/datalad-xnat/issues/42
-        config.set('datalad.xnat.default.url',
-                   url, where='dataset', reload=False)
-        config.set('datalad.xnat.default.project',
-                   project, where='dataset', reload=False)
-        config.set('datalad.xnat.default.path',
-                   path, where='dataset', reload=False)
-        config.set('datalad.xnat.default.credential-name',
-                   platform.credential_name, where='dataset')
-
-        ds.save(
-            path=ds.pathobj / '.datalad' / 'config',
-            to_git=True,
-            message="Configure default XNAT url and project",
-        )
+        _cfg_dataset(ds, url, project, path, platform.credential_name)
 
         if not platform.credential_name == 'anonymous':
             # Configure XNAT access authentication
@@ -198,3 +182,25 @@ class Init(Interface):
             status='ok',
         )
         return
+
+
+def _cfg_dataset(ds, url, project, path_spec, credential_name):
+    config = ds.config
+    # put essential configuration into the dataset
+    # TODO https://github.com/datalad/datalad-xnat/issues/42
+    for k, v in (('url', url),
+                 ('project', project),
+                 ('path', path_spec),
+                 ('credential-name', credential_name)):
+        config.set(
+            f'datalad.xnat.default.{k}',
+            v,
+            where='dataset',
+            reload=False)
+
+    ds.save(
+        path=ds.pathobj / '.datalad' / 'config',
+        to_git=True,
+        message="Configure default XNAT url and project",
+    )
+    config.reload()

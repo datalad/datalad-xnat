@@ -48,10 +48,10 @@ class Init(Interface):
             code_cmd='datalad xnat-init http://central.xnat.org:8080',
             code_py='xnat_init("http://central.xnat.org:8080")'),
         dict(
-            text='Initialise with anonymous access (no credentials used)',
-            code_cmd=('datalad xnat-init https://central.xnat.org:8080 '
+            text='Initialize with anonymous access (no credentials used)',
+            code_cmd=('datalad xnat-init https://central.xnat.org'
                       '--credential anonymous'),
-            code_py=('xnat_init("https://central.xnat.org:8080", '
+            code_py=('xnat_init("https://central.xnat.org", '
                      'credential="anonymous")'))
     ]
 

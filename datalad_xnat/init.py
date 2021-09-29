@@ -21,7 +21,6 @@ from datalad.support.constraints import (
 from datalad.support.param import Parameter
 from datalad.utils import (
     quote_cmdlinearg,
-    with_pathsep,
 )
 
 from datalad.distribution.dataset import (
@@ -77,10 +76,16 @@ class Init(Interface):
             action='store_true'),
         **_XNAT.cmd_params
     )
+
     @staticmethod
     @datasetmethod(name='xnat_init')
     @eval_results
-    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, credential=None, dataset=None):
+    def __call__(url,
+                 path="{subject}/{session}/{scan}/",
+                 project=None,
+                 force=False,
+                 credential=None,
+                 dataset=None):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
@@ -148,9 +153,12 @@ class Init(Interface):
 
         # put essential configuration into the dataset
         # TODO https://github.com/datalad/datalad-xnat/issues/42
-        config.set('datalad.xnat.default.url', url, where='dataset', reload=False)
-        config.set('datalad.xnat.default.project', project, where='dataset', reload=False)
-        config.set('datalad.xnat.default.path', path, where='dataset', reload=False)
+        config.set('datalad.xnat.default.url',
+                   url, where='dataset', reload=False)
+        config.set('datalad.xnat.default.project',
+                   project, where='dataset', reload=False)
+        config.set('datalad.xnat.default.path',
+                   path, where='dataset', reload=False)
         config.set('datalad.xnat.default.credential-name',
                    platform.credential_name, where='dataset')
 

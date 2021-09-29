@@ -23,6 +23,14 @@ from datalad.tests.utils import (
 @with_tempfile
 def test_anonymous_access(path):
     ds = Dataset(path).create()
+    assert_in_results(
+        ds.xnat_init(
+            'https://central.xnat.org',
+            project='IDONOTEXIST_used_in_datalad-xnat_CI',
+            credential='anonymous',
+            on_failure='ignore'),
+        status='error',
+        action='xnat_init')
     # minimal demo dataset (pulls .5MB from xnat central)
     ds.xnat_init(
         'https://central.xnat.org',

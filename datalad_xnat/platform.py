@@ -61,7 +61,6 @@ class _XNAT(object):
             credential = urlparse(url).netloc
 
         if credential == 'anonymous':
-            cred = dict(anonymous=True, user=None, password=None)
             auth = None
         else:
             try:
@@ -77,9 +76,6 @@ class _XNAT(object):
                     f'Authorization required for {self.fullname}, '
                     f'cannot find token for a credential {credential}.') from e
 
-            cred = dict(anonymous=False,
-                        user=auth['user'] or None,
-                        password=auth['password'] or None)
             session.auth = (auth['user'], auth['password'])
 
         # now check of auth works (if any is needed)
@@ -92,25 +88,26 @@ class _XNAT(object):
             raise RuntimeError(
                 'Failed to access the XNAT server. Full error:\n%s', e) from e
 
-        # TODO make private
-        self.cred = cred
         self._session = session
+        self._credential_name = credential
+
+    @property
+    def credential_name(self):
+        return self._credential_name
+
+    @property
+    def authenticated_user(self):
+        return self._session.auth[0] if self._session else None
 
     def get_projects(self):
         """Returns a list with project identifiers"""
-        return [
-            r['ID']
-            for r in self._unwrap(self._session.get(
-                self._get_api('projects')))
-        ]
+        return self._unwrap_ids(self._session.get(
+            self._get_api('projects')))
 
     def get_subjects(self, project):
         """Return a list of subject IDs available in a project"""
-        return [
-            r['ID']
-            for r in self._unwrap(self._session.get(
-                self._get_api('subjects', project=project)))
-        ]
+        return self._unwrap_ids(self._session.get(
+            self._get_api('subjects', project=project)))
 
     def get_nsubjs(self, project):
         """Return the number of subjects available in a project"""
@@ -118,21 +115,15 @@ class _XNAT(object):
 
     def get_experiments(self, project, subject):
         """Return a list of experiment IDs available for a project's subject"""
-        return [
-            r['ID']
-            for r in self._unwrap(self._session.get(
-                self._get_api('experiments',
-                              project=project,
-                              subject=subject)))
-        ]
+        return self._unwrap_ids(self._session.get(
+            self._get_api('experiments',
+                          project=project,
+                          subject=subject)))
 
     def get_scans(self, experiment):
         """Return a list of scan IDs available for an experiment"""
-        return [
-            r['ID']
-            for r in self._unwrap(self._session.get(
-                self._get_api('scans', experiment=experiment)))
-        ]
+        return self._unwrap_ids(self._session.get(
+            self._get_api('scans', experiment=experiment)))
 
     def get_files(self, experiment, scan):
         """Return a list of file records for a scan in an experiment"""
@@ -148,3 +139,11 @@ class _XNAT(object):
     def _unwrap(self, response):
         return response.json().get('ResultSet', {}).get('Result')
 
+    def _unwrap_ids(self, response):
+        unwrapped = self._unwrap(response)
+        # do a little dance to figure out what the ID key is
+        # normal XNAT is 'ID', but connectomeDB uses 'id'
+        # TODO is there a way to ask XNAT what it would be
+        # maybe query the schema?
+        id_attr = 'ID' if unwrapped and 'ID' in unwrapped[0] else 'id'
+        return [r[id_attr] for r in unwrapped]

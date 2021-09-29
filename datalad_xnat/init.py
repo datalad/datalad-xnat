@@ -23,7 +23,6 @@ from datalad.support.exceptions import CapturedException
 from datalad.support.param import Parameter
 from datalad.utils import (
     quote_cmdlinearg,
-    with_pathsep,
 )
 
 from datalad.distribution.dataset import (
@@ -79,10 +78,16 @@ class Init(Interface):
             action='store_true'),
         **_XNAT.cmd_params
     )
+
     @staticmethod
     @datasetmethod(name='xnat_init')
     @eval_results
-    def __call__(url, path="{subject}/{session}/{scan}/", project=None, force=False, credential=None, dataset=None):
+    def __call__(url,
+                 path="{subject}/{session}/{scan}/",
+                 project=None,
+                 force=False,
+                 credential=None,
+                 dataset=None):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
@@ -120,8 +125,8 @@ class Init(Interface):
                 'No project name specified. The following projects are '
                 'available on {} for user {}:'.format(
                     url,
-                    'anonymous' if platform.cred['anonymous']
-                    else platform.cred['user']))
+                    'anonymous' if platform.credential_name == 'anonymous'
+                    else platform.authenticated_user))
             for p in sorted(projects):
                 # list and prep for C&P
                 # TODO multi-column formatting?
@@ -159,9 +164,15 @@ class Init(Interface):
             return
 
         # put essential configuration into the dataset
-        config.set('datalad.xnat.default.url', url, where='dataset', reload=False)
-        config.set('datalad.xnat.default.project', project, where='dataset')
-        config.set('datalad.xnat.default.path', path, where='dataset')
+        # TODO https://github.com/datalad/datalad-xnat/issues/42
+        config.set('datalad.xnat.default.url',
+                   url, where='dataset', reload=False)
+        config.set('datalad.xnat.default.project',
+                   project, where='dataset', reload=False)
+        config.set('datalad.xnat.default.path',
+                   path, where='dataset', reload=False)
+        config.set('datalad.xnat.default.credential-name',
+                   platform.credential_name, where='dataset')
 
         ds.save(
             path=ds.pathobj / '.datalad' / 'config',
@@ -169,7 +180,7 @@ class Init(Interface):
             message="Configure default XNAT url and project",
         )
 
-        if not platform.cred['anonymous']:
+        if not platform.credential_name == 'anonymous':
             # Configure XNAT access authentication
             ds.run_procedure(spec='cfg_xnat_dataset')
 

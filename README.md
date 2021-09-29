@@ -1,6 +1,6 @@
 # DataLad extension tracking data in an XNAT server
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![GitHub release](https://img.shields.io/github/release/datalad/datalad-xnat.svg)](https://GitHub.com/datalad/datalad-xnat/releases/) [![PyPI version fury.io](https://badge.fury.io/py/datalad-xnat.svg)](https://pypi.python.org/pypi/datalad-xnat/) [![Build status](https://ci.appveyor.com/api/projects/status/7pug8bjjgdcvsfn7/branch/master?svg=true)](https://ci.appveyor.com/project/mih/datalad-xnat/branch/master) [![codecov.io](https://codecov.io/github/datalad/datalad-xnat/coverage.svg?branch=master)](https://codecov.io/github/datalad/datalad-xnat?branch=master) [![crippled-filesystems](https://github.com/datalad/datalad-xnat/workflows/crippled-filesystems/badge.svg)](https://github.com/datalad/datalad-xnat/actions?query=workflow%3Acrippled-filesystems)
@@ -78,6 +78,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://www.adina-wagner.com"><img src="https://avatars.githubusercontent.com/u/29738718?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Adina Wagner</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=adswa" title="Code">💻</a> <a href="https://github.com/datalad/datalad-xnat/issues?q=author%3Aadswa" title="Bug reports">🐛</a> <a href="https://github.com/datalad/datalad-xnat/commits?author=adswa" title="Documentation">📖</a> <a href="#ideas-adswa" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-adswa" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://github.com/jwodder"><img src="https://avatars.githubusercontent.com/u/98207?v=4?s=100" width="100px;" alt=""/><br /><sub><b>John T. Wodder II</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=jwodder" title="Code">💻</a> <a href="#ideas-jwodder" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="http://www.onerussian.com"><img src="https://avatars.githubusercontent.com/u/39889?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Yaroslav Halchenko</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=yarikoptic" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/JanviRaina"><img src="https://avatars.githubusercontent.com/u/50794649?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Janvi Raina</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=JanviRaina" title="Documentation">📖</a></td>
   </tr>
 </table>
 

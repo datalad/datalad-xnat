@@ -15,7 +15,6 @@ from http import HTTPStatus
 from requests import (
     HTTPError,
     Session,
-    status_codes,
 )
 from urllib.parse import (
     urlparse,
@@ -33,6 +32,16 @@ lgr = logging.getLogger('datalad.xnat.platform')
 
 # lookup error description based on HTTP error code
 http_error_lookup = {i.value: i.phrase for i in HTTPStatus}
+
+
+class XNATRequestError(Exception):
+    """A request to an XNAT server resulted in an error
+
+    This exists to explicitly distinguish an exception raised from within this
+    package from a generic one bubbling up, in order to be able to handle them
+    differently.
+    """
+    pass
 
 
 class _XNAT(object):
@@ -89,20 +98,67 @@ class _XNAT(object):
 
             session.auth = (auth['user'], auth['password'])
 
+        self._session = session
         # now check if auth works (if any is needed)
         # TODO check that we have anonymous OR user/pass
-        try:
-            session.post(self._get_api('session_token')).raise_for_status()
-        except HTTPError as e:
-            msg = e.response.reason or http_error_lookup[e.response.status_code]
-            raise RuntimeError("Failed to access the XNAT server. Reason: %s" %
-                               msg) from e
-        except Exception as e:
-            raise RuntimeError(
-                'Failed to access the XNAT server. Full error:\n%s' % e) from e
-
-        self._session = session
+        self._wrapped_post(self._get_api('session_token'))
         self._credential_name = credential
+
+    def _wrapped_get(self, *args, **kwargs):
+        """Wraps `self._session.get` for error handling.
+
+        Parameters
+        ----------
+        args:
+        kwargs:
+          passed on to self._session.get
+
+        Returns
+        -------
+        requests.Response
+
+        Raises
+        ------
+        XNATRequestError
+        """
+
+        try:
+            response = self._session.get(*args, **kwargs)
+            response.raise_for_status()
+            return response
+        except HTTPError as exc:
+            reason = exc.response.reason or \
+                     http_error_lookup[exc.response.status_code]
+            raise XNATRequestError("Request to XNAT server failed: %s"
+                                   % reason) from exc
+
+    def _wrapped_post(self, *args, **kwargs):
+        """Wraps `self._session.post` for error handling.
+
+        Parameters
+        ----------
+        args:
+        kwargs:
+          passed on to self._session.post
+
+        Returns
+        -------
+        requests.Response
+
+        Raises
+        ------
+        XNATRequestError
+        """
+
+        try:
+            response = self._session.post(*args, **kwargs)
+            response.raise_for_status()
+            return response
+        except HTTPError as exc:
+            reason = exc.response.reason or \
+                     http_error_lookup[exc.response.status_code]
+            raise XNATRequestError("Request to XNAT server failed: %s"
+                                   % reason) from exc
 
     @property
     def credential_name(self):
@@ -112,35 +168,35 @@ class _XNAT(object):
     def authenticated_user(self):
         return self._session.auth[0] if self._session else None
 
-    def get_projects(self):
+    def get_project_ids(self):
         """Returns a list with project identifiers"""
-        return self._unwrap_ids(self._session.get(
+        return self._unwrap_ids(self._wrapped_get(
             self._get_api('projects')))
 
-    def get_subjects(self, project):
+    def get_subject_ids(self, project):
         """Return a list of subject IDs available in a project"""
-        return self._unwrap_ids(self._session.get(
+        return self._unwrap_ids(self._wrapped_get(
             self._get_api('subjects', project=project)))
 
     def get_nsubjs(self, project):
         """Return the number of subjects available in a project"""
-        return len(self.get_subjects(project))
+        return len(self.get_subject_ids(project))
 
-    def get_experiments(self, project, subject):
+    def get_experiment_ids(self, project, subject):
         """Return a list of experiment IDs available for a project's subject"""
-        return self._unwrap_ids(self._session.get(
+        return self._unwrap_ids(self._wrapped_get(
             self._get_api('experiments',
                           project=project,
                           subject=subject)))
 
-    def get_scans(self, experiment):
+    def get_scan_ids(self, experiment):
         """Return a list of scan IDs available for an experiment"""
-        return self._unwrap_ids(self._session.get(
+        return self._unwrap_ids(self._wrapped_get(
             self._get_api('scans', experiment=experiment)))
 
     def get_files(self, experiment, scan):
         """Return a list of file records for a scan in an experiment"""
-        return self._unwrap(self._session.get(
+        return self._unwrap(self._wrapped_get(
             self._get_api('files', experiment=experiment, scan=scan)))
 
     def _get_api(self, id, **kwargs):

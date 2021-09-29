@@ -59,8 +59,8 @@ def parse_xnat(ds, sub, force, platform, xnat_project):
         fh = csv.writer(outfile, delimiter=',')
         fh.writerow(table_header)
         lgr.info('Querying info for subject %s', sub)
-        for experiment in platform.get_experiments(xnat_project, sub):
-            for scan in platform.get_scans(experiment):
+        for experiment in platform.get_experiment_ids(xnat_project, sub):
+            for scan in platform.get_scan_ids(experiment):
                 for file_rec in platform.get_files(experiment, scan):
                     # TODO the file size is at file_rec['Size'], could be used
                     # for progress reporting, maybe

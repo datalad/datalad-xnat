@@ -10,4 +10,5 @@ Find out more about each command below.
    :maxdepth: 1
 
    generated/man/datalad-xnat-init
+   generated/man/datalad-xnat-query-files
    generated/man/datalad-xnat-update

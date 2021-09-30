@@ -11,4 +11,5 @@ Find out more about each command below.
    :toctree: generated
 
    xnat_init
+   xnat_query_files
    xnat_update

@@ -100,6 +100,23 @@ class Update(Interface):
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
+        xnat_cfg_name = ds.config.get('datalad.xnat.default-name', 'default')
+        cfg_section = 'datalad.xnat.{}'.format(xnat_cfg_name)
+
+        # TODO fail is there is no URL
+        xnat_url = ds.config.get(f'{cfg_section}.url')
+        # TODO fail without pathfmt
+        pathfmt = ds.config.get(f'{cfg_section}.pathfmt')
+
+        if project is None:
+            project = ds.config.get(f'{cfg_section}.project')
+        if subject is None:
+            subject = ds.config.get(f'{cfg_section}.subject')
+        if experiment is None:
+            experiment = ds.config.get(f'{cfg_section}.experiment')
+        if collection is None:
+            collection = ds.config.get(f'{cfg_section}.collection', '').split()
+
         subjects = ensure_list(subject)
 
         # require a clean dataset
@@ -122,21 +139,27 @@ class Update(Interface):
             refds=ds.path,
         )
         # obtain configured XNAT url and project name
-        xnat_cfg_name = ds.config.get('datalad.xnat.default-name', 'default')
-        cfg_section = 'datalad.xnat.{}'.format(xnat_cfg_name)
-        xnat_url = ds.config.get('{}.url'.format(cfg_section))
-        xnat_project = ds.config.get('{}.project'.format(cfg_section))
-        file_path = ds.config.get('{}.path'.format(cfg_section))
         if not credential:
             credential = ds.config.get(
                 '{}.credential-name'.format(cfg_section))
 
         platform = _XNAT(xnat_url, credential=credential)
 
-        if not subjects:
-            subjects = platform.get_subject_ids(xnat_project)
-
         # parse and download one subject at a time
+        # we could also make one big query
+        if experiment is not None:
+            # no need to query
+            subjects = [None]
+        elif subjects:
+            # we can go with the subjects as-is
+            pass
+        elif project:
+            # we have a project constraint, we can resolve subjects
+            subjects = platform.get_subject_ids(project)
+        else:
+            # we have nothing to compartmentalize the query
+            # go with a single big one
+            subjects = [None]
         from datalad_xnat.parser import parse_xnat
         for sub in subjects:
             try:
@@ -154,7 +177,7 @@ class Update(Interface):
                         addurls_table,
                         platform,
                         force=force,
-                        project=xnat_project,
+                        project=project,
                         subject=sub,
                         experiment=experiment,
                         collections=ensure_list(collection)
@@ -165,7 +188,7 @@ class Update(Interface):
                 lgr.info('Downloading files for subject %s', sub)
                 # corresponds to the header field 'filename' in the csv table
                 filename = '{filename}'
-                filenameformat = f"{file_path}{filename}"
+                filenameformat = f"{pathfmt}{filename}"
                 ds.addurls(
                     str(addurls_table_fname), '{url}', filenameformat,
                     ifexists=ifexists,
@@ -179,12 +202,6 @@ class Update(Interface):
             finally:
                 if addurls_table_fname.exists():
                     addurls_table_fname.unlink()
-
-        lgr.info(
-            'There were updates for the following subjects in project %s:',
-            xnat_project)
-        for s in sorted(subjects):
-            lgr.info(" {}".format(quote_cmdlinearg(s)))
 
         yield dict(
             res,

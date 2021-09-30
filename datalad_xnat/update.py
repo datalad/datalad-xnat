@@ -93,7 +93,13 @@ class Update(Interface):
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, reckless=None, force=False, jobs='auto'):
+    def __call__(subjects='list',
+                 credential=None,
+                 dataset=None,
+                 ifexists=None,
+                 reckless=None,
+                 force=False,
+                 jobs='auto'):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
@@ -126,7 +132,8 @@ class Update(Interface):
         xnat_project = ds.config.get('{}.project'.format(cfg_section))
         file_path = ds.config.get('{}.path'.format(cfg_section))
         if not credential:
-            credential = ds.config.get('{}.credential-name'.format(cfg_section))
+            credential = ds.config.get(
+                '{}.credential-name'.format(cfg_section))
 
         platform = _XNAT(xnat_url, credential=credential)
 
@@ -140,11 +147,12 @@ class Update(Interface):
             for s in sorted(subs):
                 ui.message(" {}".format(quote_cmdlinearg(s)))
             ui.message(
-                'Specify a specific subject(s) or "all" to download associated '
-                'files for.')
+                'Specify a specific subject(s) or "all" to download '
+                'associated files for.')
             return
 
-        # query the specified subject(s) to make sure it exists and is accessible
+        # query the specified subject(s) to make sure it exists
+        # and is accessible
         # TODO we culd just take the input subject list at face-value
         # and report on all subjects for whom we got no data, instead of one
         # upfront query per subject
@@ -205,7 +213,9 @@ class Update(Interface):
                 if addurls_table_fname.exists():
                     addurls_table_fname.unlink()
 
-        lgr.info('Files were updated for the following subjects in XNAT project %s:', xnat_project)
+        lgr.info(
+            'There were updates for the following subjects in project %s:',
+            xnat_project)
         for s in sorted(subs):
             lgr.info(" {}".format(quote_cmdlinearg(s)))
 

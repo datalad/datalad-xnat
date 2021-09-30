@@ -24,6 +24,7 @@ Documentation overview
    tutorial
    contributing
    acknowledgements
+   glossary
 
 .. toctree::
    :maxdepth: 1

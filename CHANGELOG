@@ -1,3 +1,28 @@
+0.2 (Sep 30, 2021) -- hackathon!!
+
+- The first actual release of this extension. It is the outcome of Juelich
+  Brain Hackathon 2021, with numerous contributor:
+  https://github.com/datalad/datalad-xnat#contributors-
+
+  In particular it features:
+
+  - Authenticated and anonymous access to XNAT
+
+  - Support for major deployments: ConnectomeDB, NITRC IR, XNAT Central
+
+  - Full or constrained exports of entire instances, individual projects,
+    single subjects, particular acquisitions, and limit by resource
+    collections
+
+  - Flexible dataset structuring with support for multiple layers of
+    nesting
+
+  - Parallel downloads
+
+  - Documentation
+
+  - Roughly 90% test-coverage
+
 0.1 (Mar 25, 2020) -- don't touch this
 
 - Initial draft implementation

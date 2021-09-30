@@ -37,14 +37,15 @@ def test_anonymous_access(path):
         project='Sample_DICOM',
         credential='anonymous')
     ds.xnat_update(
-        subjects='dcmtest1',
+        # must be a subject's accession ID
+        subjects='CENTRAL_S01894',
     )
     # we get the project's payload DICOM in the expected location
     assert_in_results(
         ds.status(annex='availability'),
         key='MD5E-s533936--b402d6341f5894c63c991c6361ad14ff.dcm',
         has_content=True,
-        path=str(ds.pathobj / 'dcmtest1' / 'CENTRAL_E03907' / '2' /
+        path=str(ds.pathobj / 'CENTRAL_S01894' / 'CENTRAL_E03907' / '2' /
                  'dcmtest1.MR.Sample_DICOM.2.1.20010108.120022.1azj8tu.dcm'),
         state='clean',
         type='file',

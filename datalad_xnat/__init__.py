@@ -13,6 +13,12 @@ command_suite = (
             'xnat-update',
             'xnat_update',
         ),
+        (
+            'datalad_xnat.query_files',
+            'QueryFiles',
+            'xnat-query-files',
+            'xnat_query_files',
+        ),
     ]
 )
 

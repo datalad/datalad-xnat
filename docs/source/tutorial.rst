@@ -8,3 +8,4 @@ Tutorial
 
    tutorial/authentication
    tutorial/tracking_a_project
+   tutorial/understanding-init

@@ -6,7 +6,7 @@
 #   copyright and license terms.
 #
 # ## ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
-"""Integration tests for XNAT central
+"""Integration tests for NITRC Image Repository
 
 """
 
@@ -32,21 +32,21 @@ from ..platform import (
 # Idea: 1. Changes would be easy to apply to all tests
 #       2. May turn into more generic tests that can be used with different
 #          targets
-XNAT_URL = "https://central.xnat.org"
+XNAT_URL = "https://www.nitrc.org/ir"
 XNAT_CREDENTIAL = "anonymous"
 NON_EXISTENT_PROJECT = NON_EXISTENT_SUBJECT = NON_EXISTENT_EXPERIMENT = \
     "IDONOTEXIST_used_in_datalad-xnat_CI"
-PROJECT = "Sample_DICOM"
-SUBJECT = "CENTRAL_S01894"
-N_SUBJECTS = 2
-EXPERIMENT = "CENTRAL_E03907"
-SCAN = "2"
-FILE = "dcmtest1.MR.Sample_DICOM.2.1.20010108.120022.1azj8tu.dcm"
-FILE_KEY = "MD5E-s533936--b402d6341f5894c63c991c6361ad14ff.dcm"
+PROJECT = "studyforrest_rev003"
+SUBJECT = "NITRC_IR_S03684"
+N_SUBJECTS = 20
+EXPERIMENT = "NITRC_IR_E07478"
+SCAN = "BOLD_1"
+FILE = "bold_dico_xfm_dico7Tad2grpbold7Tad.mat"
+FILE_KEY = "MD5E-s405--eb58560408b3bca63a5673cd470972fa.mat"
 
 
 def test_anonymous_access_platform():
-    # test platform object w/ anonymous access to xnatcentral
+    # test platform object w/ anonymous access to nitrc-ir
 
     platform = _XNAT(XNAT_URL, credential=XNAT_CREDENTIAL)
 
@@ -87,7 +87,7 @@ def test_anonymous_access_platform():
 
 @with_tempfile
 def test_anonymous_access_api(path):
-    # test command usage w/ anonymous access to xnatcentral
+    # test command usage w/ anonymous access to nitrc-ir
 
     ds = Dataset(path).create()
     # minimal demo dataset (pulls .5MB from xnat central)
@@ -98,6 +98,8 @@ def test_anonymous_access_api(path):
         pathfmt='{subject}//{session}/{scan}/',
         credential=XNAT_CREDENTIAL)
     ds.xnat_update(
+        # limit download further as CI runs out of disk space:
+        collection="MAT",
         # must be a subject's accession ID
         jobs=2,
     )
@@ -111,3 +113,4 @@ def test_anonymous_access_api(path):
         # this seems like a bug, in subdatasets type='symlink'...
         # type='file',
     )
+

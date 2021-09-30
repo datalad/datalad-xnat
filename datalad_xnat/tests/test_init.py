@@ -36,4 +36,14 @@ def test_invalid_url(dspath):
     assert_result_count(res, 1, status='error',
                         message='Request to XNAT server failed: Not Found')
 
+# TODO:
+
+# - test no project given (ATM: No result dict, no exception)
+
+# - authenticated access w/ and w/o valid credentials
+# - authenticated access w/ inaccessible credentials
+#   ("non-interactive reference to non-existent credentials yields Authorization
+#   required for https://example.com, cannot find token for a credential
+#   non-existent.")
+# - authenticated re-execution of init should error-out w/o force
 

@@ -38,12 +38,26 @@ Getting started
 Here's the gist of some of this extension's functionality.
 Checkout the :ref:`Tutorial` for more detailed demonstrations.
 
-[COMPLETE ME] Add a quick walk-through
+Start by creating and initializing a new DataLad dataset to track a specific
+XNAT project. This example uses the `XNAT central <https://central.xnat.org/>`_
+instance with anonymous credentials for the project `DCMPHANTOM <https://central.xnat.org/app/action/DisplayItemAction/search_element/xnat%3AprojectData/search_field/xnat%3AprojectData.ID/search_value/DCMPHANTOM>`_.
+
+.. code-block::
+
+   $ datalad create dcm_phantom
+   $ cd dcm_phantom
+   $ datalad xnat-init https://central.xnat.org --credential anonymous --project DCMPHANTOM
+
+After initialization, run ``xnat-update`` to download all files for the project.
+
+.. code-block::
+
+   $ datalad xnat-update --credential anonymous --subject CENTRAL_S01742
 
 
 .. admonition:: HELP! I'm new to this!
 
-   If you are confused about the words DataLad dataset, sibling, or dataset publishing,  please head over to the `DataLad Handbook`_ for an introduction to DataLad.
+   If you are confused about the words DataLad dataset,  please head over to the `DataLad Handbook`_ for an introduction to DataLad.
 
    If you are confused about the words project, experiment, or session in the context of XNAT, take a look at the :ref:`glossary` or in the `XNAT documentation <https://wiki.xnat.org/docs>`_.
 

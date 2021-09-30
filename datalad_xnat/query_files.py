@@ -175,7 +175,14 @@ def query_files(platform, experiment=None, project=None, subject=None):
             for ik, ek in _import_experiment_props.items():
                 if ik in er:
                     fr[ek] = er[ik]
-            yield dict(res,
-                       status='ok',
-                       type='file',
-                       **fr)
+            yield dict(
+                res,
+                status='ok',
+                type='file',
+                # give artificial internal XNAT path, matches API,
+                # improves comprehension
+                path=f"{fr['experiment_id']}/{fr['scan_id']}/{fr['name']}",
+                # include collection info (i.e. resource)
+                message=fr.get('collection'),
+                **fr
+            )

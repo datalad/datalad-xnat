@@ -176,7 +176,7 @@ class _XNAT(object):
 
     def get_project_ids(self):
         """Returns a list with project identifiers"""
-        return self._unwrap_ids(self.get_subject_ids())
+        return self._unwrap_ids(self.get_projects())
 
     def get_subject_ids(self, project):
         """Return a list of subject IDs available in a project"""

@@ -86,14 +86,16 @@ class Update(Interface):
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subject=None,
-                 credential=None,
-                 dataset=None,
-                 ifexists=None,
-                 reckless=None,
-                 force=False,
+    def __call__(project=None,
+                 subject=None,
+                 experiment=None,
                  collection=None,
-                 jobs='auto'):
+                 credential=None,
+                 force=False,
+                 reckless=None,
+                 ifexists=None,
+                 jobs='auto',
+                 dataset=None):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
@@ -150,10 +152,11 @@ class Update(Interface):
                         encoding='utf-8') as addurls_table:
                     yield from parse_xnat(
                         addurls_table,
-                        sub=sub,
+                        platform,
                         force=force,
-                        platform=platform,
-                        xnat_project=xnat_project,
+                        project=xnat_project,
+                        subject=sub,
+                        experiment=experiment,
                         collections=ensure_list(collection)
                         if collection else None,
                     )

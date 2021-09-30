@@ -94,7 +94,7 @@ class _XNAT(object):
                 lgr.warning(
                     'Cannot determine user/password for %s', credential)
                 raise ValueError(
-                    f'Authorization required for {self.fullname}, '
+                    f'Authorization required for {self.url}, '
                     f'cannot find token for a credential {credential}.') from e
 
             session.auth = (auth['user'], auth['password'])

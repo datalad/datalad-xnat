@@ -155,7 +155,7 @@ def query_files(platform, experiment=None, project=None, subject=None):
                 if k.lower() in _standardize_file_keys
             }
             # spot check digest
-            digest = fr.pop('digest')
+            digest = fr.pop('digest', '')
             if len(digest) == 32:
                 fr['digest-md5'] = digest
             else:

@@ -40,6 +40,7 @@ def test_anonymous_access(path):
     ds.xnat_update(
         # must be a subject's accession ID
         subjects='CENTRAL_S01894',
+        jobs=2,
     )
     # we get the project's payload DICOM in the expected location
     assert_in_results(

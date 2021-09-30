@@ -175,6 +175,7 @@ class Update(Interface):
                 # make sure the table content is on disk for addurls
                 # to read
                 addurls_table.flush()
+                addurls_table.close()
 
                 # add file urls for subject
                 lgr.info('Downloading files for subject %s', sub)

@@ -97,6 +97,7 @@ class Update(Interface):
                  jobs='auto',
                  dataset=None):
 
+
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
@@ -161,6 +162,7 @@ class Update(Interface):
             # go with a single big one
             subjects = [None]
         from datalad_xnat.parser import parse_xnat
+        from unittest.mock import patch
         for sub in subjects:
             try:
                 # all this tempfile madness is only needed because windows
@@ -189,16 +191,31 @@ class Update(Interface):
                 # corresponds to the header field 'filename' in the csv table
                 filename = '{filename}'
                 filenameformat = f"{pathfmt}{filename}"
-                ds.addurls(
-                    str(addurls_table_fname), '{url}', filenameformat,
-                    ifexists=ifexists,
-                    fast=True if reckless == 'fast'
-                    else False,
-                    save=True,
-                    jobs=jobs,
-                    cfg_proc=None if platform.credential_name == 'anonymous'
-                    else 'xnat_dataset',
-                    result_renderer='default')
+                # shoehorn essential info into the ENV to make it
+                # accessible to the config procedure
+                # TODO maybe alter the config procedure to pull this info
+                # from a superdataset, if it finds the dataset at hand
+                # unconfigured.
+                env_prefix = f'DATALAD_XNAT_{xnat_cfg_name.upper()}'
+                env = {
+                    'DATALAD_XNAT_DEFAULT__NAME': xnat_cfg_name,
+                    f'{env_prefix}_URL': platform.url,
+                }
+                if platform.credential_name != 'anonymous':
+                    env[f'{env_prefix}_CREDENTIAL__NAME'] = \
+                        platform.credential_name
+                with patch.dict('os.environ', env):
+                    ds.addurls(
+                        str(addurls_table_fname), '{url}', filenameformat,
+                        ifexists=ifexists,
+                        fast=True if reckless == 'fast'
+                        else False,
+                        save=True,
+                        jobs=jobs,
+                        cfg_proc=None
+                        if platform.credential_name == 'anonymous'
+                        else 'xnat_dataset',
+                        result_renderer='default')
             finally:
                 if addurls_table_fname.exists():
                     addurls_table_fname.unlink()

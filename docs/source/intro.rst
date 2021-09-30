@@ -7,8 +7,9 @@ Introduction
 XNAT
 ----
 
-[COMPLETE ME] What is XNAT
-
+`XNAT`_ is an open source platform purpose-built for imaging data and
+data associated with it. In addition to hosting and cataloging the data, XNAT
+can assist with triggering quality assurance tasks and other workflows.
 
 Goal of the extension
 ---------------------

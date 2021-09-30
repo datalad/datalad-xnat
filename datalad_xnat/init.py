@@ -137,7 +137,7 @@ class Init(Interface):
         )
 
         # check if dataset already initialized
-        if 'datalad.xnat.default.url' in ds.config:
+        if not force and 'datalad.xnat.default.url' in ds.config:
             yield dict(
                 res,
                 status='error',

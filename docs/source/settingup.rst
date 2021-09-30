@@ -45,6 +45,8 @@ Checkout the :ref:`Tutorial` for more detailed demonstrations.
 
    If you are confused about the words DataLad dataset, sibling, or dataset publishing,  please head over to the `DataLad Handbook`_ for an introduction to DataLad.
 
+   If you are confused about the words project, experiment, or session in the context of XNAT, take a look at the :ref:`glossary` or in the `XNAT documentation <https://wiki.xnat.org/docs>`_.
+
 .. rubric:: Footnotes
 
 .. [#f1] While installable for Windows 10, the extension may not be able to perform all functionality documented here. Please get in touch if you are familiar with Windows `to help us fix bugs <https://github.com/datalad/datalad-osf/issues?q=is%3Aissue+is%3Aopen+windows>`_.

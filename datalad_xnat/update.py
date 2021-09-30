@@ -191,19 +191,13 @@ class Update(Interface):
                     ifexists=ifexists,
                     fast=True if reckless == 'fast'
                     else False,
-                    save=False,
+                    save=True,
                     cfg_proc=None if platform.credential_name == 'anonymous'
                     else 'xnat_dataset',
-                    result_renderer='default',
-                )
+                    result_renderer='default')
             finally:
                 if addurls_table_fname.exists():
                     addurls_table_fname.unlink()
-
-            ds.save(
-                message=f"Update files for subject {sub}",
-                recursive=True
-            )
 
         lgr.info('Files were updated for the following subjects in XNAT project %s:', xnat_project)
         for s in sorted(subs):

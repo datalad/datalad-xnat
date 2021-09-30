@@ -87,6 +87,10 @@ class Update(Interface):
             doc="""force (re-)building the addurl tables""",
             action='store_true'),
         jobs=jobs_opt,
+        collection=Parameter(
+            args=("--collection",),
+            action='append',
+            doc="""collection/resource to limit the update to"""),
         **_XNAT.cmd_params
     )
 
@@ -99,6 +103,7 @@ class Update(Interface):
                  ifexists=None,
                  reckless=None,
                  force=False,
+                 collection=None,
                  jobs='auto'):
 
         ds = require_dataset(
@@ -192,6 +197,8 @@ class Update(Interface):
                         force=force,
                         platform=platform,
                         xnat_project=xnat_project,
+                        collections=ensure_list(collection)
+                        if collection else None,
                     )
 
                 # add file urls for subject

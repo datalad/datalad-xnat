@@ -17,7 +17,7 @@ from datalad_xnat.query_files import query_files
 lgr = logging.getLogger('datalad.xnat.parse')
 
 
-def parse_xnat(outfile, sub, force, platform, xnat_project):
+def parse_xnat(outfile, sub, force, platform, xnat_project, collections=None):
     """Lookup specified subject for configured XNAT project and build csv table.
 
     Parameters
@@ -31,6 +31,9 @@ def parse_xnat(outfile, sub, force, platform, xnat_project):
     platform: str
         XNAT instance
     xnat_project: str
+    collections : list
+        If given, a list of collection/resource labels to limit the results
+        to.
     """
     # create csv table containing subject info & file urls
     table_header = ['subject', 'session', 'scan', 'filename', 'url']
@@ -40,6 +43,9 @@ def parse_xnat(outfile, sub, force, platform, xnat_project):
     fh.writerow(table_header)
     lgr.info('Querying info for subject %s', sub)
     for fr in query_files(platform, project=xnat_project, subject=sub):
+        if collections and fr.get('collection') not in collections:
+            lgr.debug('File excluded by collection selection')
+            continue
         # communicate the query (makes outside error control possible)
         yield fr
         # TODO the file size is at file_rec['Size'], could be used

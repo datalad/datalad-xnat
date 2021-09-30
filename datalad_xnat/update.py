@@ -86,8 +86,8 @@ class Update(Interface):
             args=("-f", "--force",),
             doc="""force (re-)building the addurl tables""",
             action='store_true'),
-        **_XNAT.cmd_params,
-        jobs=jobs_opt
+        jobs=jobs_opt,
+        **_XNAT.cmd_params
     )
 
     @staticmethod

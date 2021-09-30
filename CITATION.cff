@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+message: Please cite the following works when using this software.
+authors:
+  - family-names: "Halchenko"
+    given-names: "Yaroslav"
+    orcid: "https://orcid.org/0000-0003-3456-2493"
+  - family-names: "Poldrack"
+    given-names: "Benjamin"
+    orcid: "https://orcid.org/0000-0001-7628-0801"
+  - family-names: "Wagner"
+    given-names: "Adina"
+    orcid: "https://orcid.org/0000-0003-2917-3450"
+  - family-names: "Waite"
+    given-names: "Laura"
+    orcid: "https://orcid.org/0000-0003-2213-7465"
+  - family-names: "Hanke"
+    given-names: "Michael"
+    orcid: "https://orcid.org/0000-0001-6398-6370"
+  - family-names: "Wodder"
+    given-names: "John T."
+  - family-names: "Raina"
+    given-names: "Janvi"
+  - family-names: "Heunis"
+    given-names: "Stephan"
+  - family-names: "Tsankeu"
+    given-names: "Odelfa"
+  - family-names: "Szczepanik"
+    given-names: "Michał"
+  - family-names: "Waite"
+    given-names: "Alex"
+    orcid: "https://orcid.org/0000-0002-8402-6173"
+  - family-names: "Portoles"
+    given-names: "Oscar"
+    orcid: "https://orcid.org/0000-0001-8308-3873"
+
+doi:
+identifiers:
+  - type: doi
+    value:
+keywords:
+  - Computational reproducibility
+  - reproducibility
+  - Python
+  - data management
+  - workflow
+title: >-
+  DataLad XNAT extension
+version: 0.2
+date-released: 2021-09-30
+url: "https://github.com/datalad/datalad-xnat"

@@ -50,9 +50,10 @@ class _XNAT(object):
         session_token='data/JSESSION',
         projects='data/projects?format=json',
         subjects='data/projects/{project}/subjects?format=json',
-        experiments='data/projects/{project}/subjects/{subject}/experiments?format=json',
+        experiment='data/experiments/{experiment}?format=json',
+        experiments='data/experiments?format=json',
         scans='data/experiments/{experiment}/scans?format=json',
-        files='data/experiments/{experiment}/scans/{scan}/files?format=json',
+        files='data/experiments/{experiment}/scans/ALL/files?format=json',
     )
 
     cmd_params = dict(
@@ -70,6 +71,29 @@ class _XNAT(object):
             provided name. If none is provided, the host-part of the XNAT URL
             is used as a name (e.g. 'https://central.xnat.org' ->
             'central.xnat.org')"""),
+        project=Parameter(
+            args=("-p", "--project",),
+            metavar='ID',
+            doc="""accession ID of a single XNAT project to track""",
+        ),
+        subject=Parameter(
+            args=("-s", "--subject",),
+            metavar='ID',
+            doc="""accession ID of a single subject to track""",
+        ),
+        experiment=Parameter(
+            args=("-e", "--experiment",),
+            metavar='ID',
+            doc="""accession ID of a single experiment to track""",
+        ),
+        collection=Parameter(
+            args=("-c", "--collection",),
+            metavar='LABEL',
+            action='append',
+            doc="""limit updates to a specific collection/resource.
+            [CMD: Can be given multiple times CMD][PY: Multiple collections
+            can be specified as a list PY]""",
+        ),
     )
 
     def __init__(self, url, credential):
@@ -93,7 +117,7 @@ class _XNAT(object):
                 lgr.warning(
                     'Cannot determine user/password for %s', credential)
                 raise ValueError(
-                    f'Authorization required for {self.fullname}, '
+                    f'Authorization required for {self.url}, '
                     f'cannot find token for a credential {credential}.') from e
 
             session.auth = (auth['user'], auth['password'])
@@ -103,6 +127,25 @@ class _XNAT(object):
         # TODO check that we have anonymous OR user/pass
         self._wrapped_post(self._get_api('session_token'))
         self._credential_name = credential
+
+    def _wrapped_request(self, method, *args, **kwargs):
+        """Helper for `_wrapped_get` and `_wrapped_post`"""
+
+        if method not in ['GET', 'POST']:
+            raise ValueError("method parameter can either be 'GET' or 'POST'.")
+
+        req = self._session.get if method == 'GET' else self._session.post
+
+        try:
+            lgr.debug('%s: %s, %s', method, args, kwargs)
+            response = req(*args, **kwargs)
+            response.raise_for_status()
+            return response
+        except HTTPError as exc:
+            reason = exc.response.reason or \
+                     http_error_lookup[exc.response.status_code]
+            raise XNATRequestError("Request to XNAT server failed: %s"
+                                   % reason) from exc
 
     def _wrapped_get(self, *args, **kwargs):
         """Wraps `self._session.get` for error handling.
@@ -122,15 +165,7 @@ class _XNAT(object):
         XNATRequestError
         """
 
-        try:
-            response = self._session.get(*args, **kwargs)
-            response.raise_for_status()
-            return response
-        except HTTPError as exc:
-            reason = exc.response.reason or \
-                     http_error_lookup[exc.response.status_code]
-            raise XNATRequestError("Request to XNAT server failed: %s"
-                                   % reason) from exc
+        return self._wrapped_request('GET', *args, **kwargs)
 
     def _wrapped_post(self, *args, **kwargs):
         """Wraps `self._session.post` for error handling.
@@ -150,15 +185,7 @@ class _XNAT(object):
         XNATRequestError
         """
 
-        try:
-            response = self._session.post(*args, **kwargs)
-            response.raise_for_status()
-            return response
-        except HTTPError as exc:
-            reason = exc.response.reason or \
-                     http_error_lookup[exc.response.status_code]
-            raise XNATRequestError("Request to XNAT server failed: %s"
-                                   % reason) from exc
+        return self._wrapped_request('POST', *args, **kwargs)
 
     @property
     def credential_name(self):
@@ -168,36 +195,56 @@ class _XNAT(object):
     def authenticated_user(self):
         return self._session.auth[0] if self._session else None
 
+    def get_projects(self):
+        """Returns a list with project records"""
+        return self._unwrap(self._wrapped_get(self._get_api('projects')))
+
     def get_project_ids(self):
         """Returns a list with project identifiers"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('projects')))
+        return self._unwrap_ids(self.get_projects())
 
     def get_subject_ids(self, project):
         """Return a list of subject IDs available in a project"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('subjects', project=project)))
+        return self._unwrap_ids(self._unwrap(self._wrapped_get(
+            self._get_api('subjects', project=project))))
 
     def get_nsubjs(self, project):
         """Return the number of subjects available in a project"""
         return len(self.get_subject_ids(project))
 
-    def get_experiment_ids(self, project, subject):
+    def get_experiment(self, experiment):
+        """Return an experiment record"""
+        url = self._get_api('experiment', experiment=experiment)
+        items = self._wrapped_get(url).json().get('items', [])
+        if not items:
+            return
+        if len(items) > 1:
+            raise ValueError('Non-unique experiment identifier')
+        return items[0]['data_fields']
+
+    def get_experiments(self, project=None, subject=None):
+        """Return a list of experiment records for a project's subject"""
+        url = self._get_api('experiments')
+        # optionally constrain the query
+        if project:
+            url += f'&project={project}'
+        if subject:
+            url += f'&subject_ID={subject}'
+        return self._unwrap(self._wrapped_get(url))
+
+    def get_experiment_ids(self, project=None, subject=None):
         """Return a list of experiment IDs available for a project's subject"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('experiments',
-                          project=project,
-                          subject=subject)))
+        return self._unwrap_ids(self.get_experiments(project, subject))
 
     def get_scan_ids(self, experiment):
         """Return a list of scan IDs available for an experiment"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('scans', experiment=experiment)))
+        return self._unwrap_ids(self._unwrap(self._wrapped_get(
+            self._get_api('scans', experiment=experiment))))
 
-    def get_files(self, experiment, scan):
+    def get_files(self, experiment):
         """Return a list of file records for a scan in an experiment"""
         return self._unwrap(self._wrapped_get(
-            self._get_api('files', experiment=experiment, scan=scan)))
+            self._get_api('files', experiment=experiment)))
 
     def _get_api(self, id, **kwargs):
         ep = self.api_endpoints[id]
@@ -208,11 +255,10 @@ class _XNAT(object):
     def _unwrap(self, response):
         return response.json().get('ResultSet', {}).get('Result')
 
-    def _unwrap_ids(self, response):
-        unwrapped = self._unwrap(response)
+    def _unwrap_ids(self, results):
         # do a little dance to figure out what the ID key is
         # normal XNAT is 'ID', but connectomeDB uses 'id'
         # TODO is there a way to ask XNAT what it would be
         # maybe query the schema?
-        id_attr = 'ID' if unwrapped and 'ID' in unwrapped[0] else 'id'
-        return [r[id_attr] for r in unwrapped]
+        id_attr = 'ID' if results and 'ID' in results[0] else 'id'
+        return [r[id_attr] for r in results]

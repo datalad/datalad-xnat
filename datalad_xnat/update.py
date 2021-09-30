@@ -10,6 +10,9 @@
 """
 
 import logging
+import os
+from pathlib import Path
+from tempfile import mkstemp
 
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
@@ -29,6 +32,10 @@ from datalad.distribution.dataset import (
     datasetmethod,
     EnsureDataset,
     require_dataset,
+)
+
+from datalad.interface.common_opts import (
+    jobs_opt,
 )
 
 from .platform import _XNAT
@@ -54,13 +61,6 @@ class Update(Interface):
             doc="""specify the dataset to perform the update on""",
             constraints=EnsureDataset() | EnsureNone()
         ),
-        subjects=Parameter(
-            args=("-s", "--subjects"),
-            nargs='+',
-            doc="""Specify the subject(s) to downloaded associated files for.
-            'list': list existing subjects,
-            'all': download files for all existing subjects""",
-        ),
         ifexists=Parameter(
             args=("--ifexists",),
             doc="""Flag for addurls""",
@@ -79,18 +79,46 @@ class Update(Interface):
             args=("-f", "--force",),
             doc="""force (re-)building the addurl tables""",
             action='store_true'),
+        jobs=jobs_opt,
         **_XNAT.cmd_params
     )
 
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, reckless=None, force=False):
+    def __call__(project=None,
+                 subject=None,
+                 experiment=None,
+                 collection=None,
+                 credential=None,
+                 force=False,
+                 reckless=None,
+                 ifexists=None,
+                 jobs='auto',
+                 dataset=None):
+
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
-        subjects = ensure_list(subjects)
+        xnat_cfg_name = ds.config.get('datalad.xnat.default-name', 'default')
+        cfg_section = 'datalad.xnat.{}'.format(xnat_cfg_name)
+
+        # TODO fail is there is no URL
+        xnat_url = ds.config.get(f'{cfg_section}.url')
+        # TODO fail without pathfmt
+        pathfmt = ds.config.get(f'{cfg_section}.pathfmt')
+
+        if project is None:
+            project = ds.config.get(f'{cfg_section}.project')
+        if subject is None:
+            subject = ds.config.get(f'{cfg_section}.subject')
+        if experiment is None:
+            experiment = ds.config.get(f'{cfg_section}.experiment')
+        if collection is None:
+            collection = ds.config.get(f'{cfg_section}.collection', '').split()
+
+        subjects = ensure_list(subject)
 
         # require a clean dataset
         if ds.repo.dirty:
@@ -112,87 +140,85 @@ class Update(Interface):
             refds=ds.path,
         )
         # obtain configured XNAT url and project name
-        xnat_cfg_name = ds.config.get('datalad.xnat.default-name', 'default')
-        cfg_section = 'datalad.xnat.{}'.format(xnat_cfg_name)
-        xnat_url = ds.config.get('{}.url'.format(cfg_section))
-        xnat_project = ds.config.get('{}.project'.format(cfg_section))
-        file_path = ds.config.get('{}.path'.format(cfg_section))
         if not credential:
-            credential = ds.config.get('{}.credential-name'.format(cfg_section))
+            credential = ds.config.get(
+                '{}.credential-name'.format(cfg_section))
 
         platform = _XNAT(xnat_url, credential=credential)
 
-        # provide subject list
-        if 'list' in subjects:
-            from datalad.ui import ui
-            subs = platform.get_subject_ids(xnat_project)
-            ui.message(
-                'The following subjects are available for XNAT '
-                'project {}:'.format(xnat_project))
-            for s in sorted(subs):
-                ui.message(" {}".format(quote_cmdlinearg(s)))
-            ui.message(
-                'Specify a specific subject(s) or "all" to download associated '
-                'files for.')
-            return
-
-        # query the specified subject(s) to make sure it exists and is accessible
-        # TODO we culd just take the input subject list at face-value
-        # and report on all subjects for whom we got no data, instead of one
-        # upfront query per subject
-        if 'all' not in subjects:
-            from datalad.ui import ui
-            subs = []
-            for s in subjects:
-                nexp = len(platform.get_experiment_ids(xnat_project, s))
-                if nexp > 0:
-                    subs.append(s)
-                else:
-                    ui.message(
-                        'Failed to obtain information on subject {} from XNAT '
-                        'project {}:'.format(s, xnat_project))
-                    return
-        else:
-            # if all, get list of all subjects
-            subs = platform.get_subject_ids(xnat_project)
-
         # parse and download one subject at a time
+        # we could also make one big query
+        if experiment is not None:
+            # no need to query
+            subjects = [None]
+        elif subjects:
+            # we can go with the subjects as-is
+            pass
+        elif project:
+            # we have a project constraint, we can resolve subjects
+            subjects = platform.get_subject_ids(project)
+        else:
+            # we have nothing to compartmentalize the query
+            # go with a single big one
+            subjects = [None]
         from datalad_xnat.parser import parse_xnat
-        addurl_dir = ds.pathobj / 'code' / 'addurl_files'
-        for sub in subs:
-            yield from parse_xnat(
-                ds,
-                sub=sub,
-                force=force,
-                platform=platform,
-                xnat_project=xnat_project,
-            )
+        from unittest.mock import patch
+        for sub in subjects:
+            try:
+                # all this tempfile madness is only needed because windows
+                # cannot open the same file twice. shame!
+                addurls_table, addurls_table_fname = mkstemp()
+                addurls_table_fname = Path(addurls_table_fname)
+                os.close(addurls_table)
+                with open(
+                        addurls_table_fname,
+                        'w',
+                        newline='',
+                        encoding='utf-8') as addurls_table:
+                    yield from parse_xnat(
+                        addurls_table,
+                        platform,
+                        force=force,
+                        project=project,
+                        subject=sub,
+                        experiment=experiment,
+                        collections=ensure_list(collection)
+                        if collection else None,
+                    )
 
-            # add file urls for subject
-            lgr.info('Downloading files for subject %s', sub)
-            table = addurl_dir / f'{sub}_table.csv'
-            # this corresponds to the header field 'filename' in the csv table
-            filename = '{filename}'
-            filenameformat = f"{file_path}{filename}"
-            ds.addurls(
-                str(table), '{url}', filenameformat,
-                ifexists=ifexists,
-                fast=True if reckless == 'fast'
-                else False,
-                save=False,
-                cfg_proc=None if platform.credential_name == 'anonymous'
-                else 'xnat_dataset',
-                result_renderer='default',
-            )
-
-            ds.save(
-                message=f"Update files for subject {sub}",
-                recursive=True
-            )
-
-        lgr.info('Files were updated for the following subjects in XNAT project %s:', xnat_project)
-        for s in sorted(subs):
-            lgr.info(" {}".format(quote_cmdlinearg(s)))
+                # add file urls for subject
+                lgr.info('Downloading files for subject %s', sub)
+                # corresponds to the header field 'filename' in the csv table
+                filename = '{filename}'
+                filenameformat = f"{pathfmt}{filename}"
+                # shoehorn essential info into the ENV to make it
+                # accessible to the config procedure
+                # TODO maybe alter the config procedure to pull this info
+                # from a superdataset, if it finds the dataset at hand
+                # unconfigured.
+                env_prefix = f'DATALAD_XNAT_{xnat_cfg_name.upper()}'
+                env = {
+                    'DATALAD_XNAT_DEFAULT__NAME': xnat_cfg_name,
+                    f'{env_prefix}_URL': platform.url,
+                }
+                if platform.credential_name != 'anonymous':
+                    env[f'{env_prefix}_CREDENTIAL__NAME'] = \
+                        platform.credential_name
+                with patch.dict('os.environ', env):
+                    ds.addurls(
+                        str(addurls_table_fname), '{url}', filenameformat,
+                        ifexists=ifexists,
+                        fast=True if reckless == 'fast'
+                        else False,
+                        save=True,
+                        jobs=jobs,
+                        cfg_proc=None
+                        if platform.credential_name == 'anonymous'
+                        else 'xnat_dataset',
+                        result_renderer='default')
+            finally:
+                if addurls_table_fname.exists():
+                    addurls_table_fname.unlink()
 
         yield dict(
             res,

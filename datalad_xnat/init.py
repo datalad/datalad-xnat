@@ -30,6 +30,7 @@ from datalad.distribution.dataset import (
     EnsureDataset,
     require_dataset,
 )
+from datalad.ui import ui
 from .platform import (
     _XNAT,
     XNATRequestError
@@ -80,14 +81,11 @@ class Init(Interface):
             args=("url",),
             doc="""XNAT instance URL""",
         ),
-        project=Parameter(
-            args=("-p", "--project",),
-            doc="""name of an XNAT project to track""",
-        ),
-        path=Parameter(
-            args=("-O", "--path",),
+        pathfmt=Parameter(
+            args=("-F", "--pathfmt",),
             doc="""Specify the directory structure for the downloaded files, and
-            if/where a subdataset should be created.
+            if/where a subdataset should be created. The format string must use
+            POSIX notation and must end with a slash ('/').
             To include the subject, session, or scan values, use the following
             format: {subject}/{session}/{scan}/
             To insert a subdataset at a specific directory level use '//':
@@ -97,6 +95,11 @@ class Init(Interface):
             args=("-f", "--force",),
             doc="""force (re-)initialization""",
             action='store_true'),
+        interactive=Parameter(
+            args=("--interactive",),
+            doc="""enables interactive configuration based on XNAT queries.
+            Default: enabled in interactive sessions.""",
+            action='store_true'),
         **_XNAT.cmd_params
     )
 
@@ -104,18 +107,25 @@ class Init(Interface):
     @datasetmethod(name='xnat_init')
     @eval_results
     def __call__(url,
-                 path="{subject}/{session}/{scan}/",
+                 pathfmt="{subject}/{session}/{scan}/",
                  project=None,
-                 force=False,
+                 subject=None,
+                 experiment=None,
+                 collection=None,
                  credential=None,
+                 force=False,
+                 interactive=None,
                  dataset=None):
+
+        if not pathfmt[-1] == '/':
+            raise ValueError(
+                'Path format specification must end with a slash character')
+
+        if interactive is None:
+            interactive = ui.is_interactive
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
-
-        # TODO needs a better solution, with_pathsep adds a platform pathsep
-        # and ruins everything on windows
-        #path = with_pathsep(path)
 
         # prep for yield
         res = dict(
@@ -125,6 +135,16 @@ class Init(Interface):
             logger=lgr,
             refds=ds.path,
         )
+
+        # check if dataset already initialized
+        if not force and 'datalad.xnat.default.url' in ds.config:
+            yield dict(
+                res,
+                status='error',
+                message='Dataset found already initialized, '
+                        'use `force` to reinitialize',
+            )
+            return
 
         try:
             platform = _XNAT(url, credential=credential)
@@ -147,52 +167,29 @@ class Init(Interface):
             )
             return
 
-        if project is None:
-            from datalad.ui import ui
-            projects = platform.get_project_ids()
-            ui.message(
-                'No project name specified. The following projects are '
-                'available on {} for user {}:'.format(
-                    url,
-                    'anonymous' if platform.credential_name == 'anonymous'
-                    else platform.authenticated_user))
-            for p in sorted(projects):
-                # list and prep for C&P
-                # TODO multi-column formatting?
-                ui.message("  {}".format(quote_cmdlinearg(p)))
-            return
+        if interactive:
+            # makes queries and let a user pick values
+            if project is None:
+                pass
+            if subject is None:
+                pass
+            if experiment is None:
+                pass
+            if collection is None:
+                pass
+        # at this point, any None value of project, subject, experiment,
+        # collection means: do not limit -- take all
 
-        # query the specified project to make sure it exists and is accessible
-        try:
-            # TODO for big projects this may not be the cheapest possible query
-            # that ensures existence of the project
-            nsubj = platform.get_nsubjs(project)
-        except Exception as e:
-            yield dict(
-                res,
-                status='error',
-                message=(
-                    'Failed to obtain information on project %s from XNAT. '
-                    'Full error:\n%s',
-                    project, e),
-            )
-            return
-
-        lgr.info('XNAT reports %i subjects currently on-record for project %s',
-                 nsubj, project)
-
-        # check if dataset already initialized
-        auth_dir = ds.pathobj / '.datalad' / 'providers'
-        if auth_dir.exists() and not force:
-            yield dict(
-                res,
-                status='error',
-                message='Dataset found already initialized, '
-                        'use `force` to reinitialize',
-            )
-            return
-
-        _cfg_dataset(ds, url, project, path, platform.credential_name)
+        _cfg_dataset(
+            ds,
+            url,
+            project,
+            subject,
+            experiment,
+            collection,
+            pathfmt,
+            platform.credential_name,
+        )
 
         if not platform.credential_name == 'anonymous':
             # Configure XNAT access authentication
@@ -205,19 +202,28 @@ class Init(Interface):
         return
 
 
-def _cfg_dataset(ds, url, project, path_spec, credential_name):
+def _cfg_dataset(ds, url, project, subject, experiment, collection,
+                 pathfmt, credential_name):
     config = ds.config
     # put essential configuration into the dataset
     # TODO https://github.com/datalad/datalad-xnat/issues/42
     for k, v in (('url', url),
                  ('project', project),
-                 ('path', path_spec),
+                 ('subject', subject),
+                 ('experiment', experiment),
+                 ('collection', collection),
+                 ('pathfmt', pathfmt),
                  ('credential-name', credential_name)):
-        config.set(
-            f'datalad.xnat.default.{k}',
-            v,
-            where='dataset',
-            reload=False)
+        cfgvar = f'datalad.xnat.default.{k}'
+        if v is None:
+            if cfgvar in config:
+                config.unset(cfgvar, where='dataset', reload=False)
+        else:
+            config.set(
+                cfgvar,
+                ' '.join(v) if isinstance(v, list) else v,
+                where='dataset',
+                reload=False)
 
     ds.save(
         path=ds.pathobj / '.datalad' / 'config',

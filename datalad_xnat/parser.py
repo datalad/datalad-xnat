@@ -12,73 +12,51 @@
 import logging
 import csv
 
+from datalad_xnat.query_files import query_files
+
 lgr = logging.getLogger('datalad.xnat.parse')
 
 
-def parse_xnat(ds, sub, force, platform, xnat_project):
+def parse_xnat(outfile, platform, force=False,
+               project=None, subject=None, experiment=None,
+               collections=None):
     """Lookup specified subject for configured XNAT project and build csv table.
 
     Parameters
     ----------
-    ds: Dataset
-    sub: str
-        The subject to build a csv table for.
-    force: str
-        Re-build csv table if it already exists.
+    outfile: file-like
+        Writable file descriptor.
     platform: str
         XNAT instance
-    xnat_project: str
+    force: str
+        Re-build csv table if it already exists.
+    project: str
+    subject: str
+    experiment: str
+    collections : list
+        If given, a list of collection/resource labels to limit the results
+        to.
     """
-
-    # prep for yield
-    res = dict(
-        action='xnat_parse',
-        type='file',
-        logger=lgr,
-        refds=ds.path,
-    )
-
     # create csv table containing subject info & file urls
     table_header = ['subject', 'session', 'scan', 'filename', 'url']
-    sub_table = ds.pathobj / 'code' / 'addurl_files' / f'{sub}_table.csv'
-
-    # check if table already exists
-    if sub_table.exists() and not force:
-        lgr.info(
-            '%s already exists. To query latest subject info, use `force`.',
-            sub_table)
-        return
-        #TODO: provide more info about existing file
-    elif sub_table.exists() and force:
-        sub_table.unlink()
-
-    sub_table.parent.mkdir(parents=True, exist_ok=True)
 
     # write subject info to file
-    with open(sub_table, 'w', newline='', encoding='utf-8') as outfile:
-        fh = csv.writer(outfile, delimiter=',')
-        fh.writerow(table_header)
-        lgr.info('Querying info for subject %s', sub)
-        for experiment in platform.get_experiment_ids(xnat_project, sub):
-            for scan in platform.get_scan_ids(experiment):
-                for file_rec in platform.get_files(experiment, scan):
-                    # TODO the file size is at file_rec['Size'], could be used
-                    # for progress reporting, maybe
-                    filename = file_rec['Name']
-                    # URIs should be absolute, but be robust, just in case
-                    url = f"{platform.url}{file_rec['URI']}" \
-                        if file_rec['URI'][0] == '/' \
-                        else f"{platform.url}/{file_rec['URI']}"
-                    # create line for each file with necessary subject info
-                    fh.writerow([sub, experiment, scan, filename, url])
-
-    ds.save(
-        path=sub_table,
-        message=f"Add file url table for {sub}",
-        to_git=True
-    )
-
-    yield dict(
-        res,
-        status='ok',
-    )
+    fh = csv.writer(outfile, delimiter=',')
+    fh.writerow(table_header)
+    for fr in query_files(
+            platform, project=project, subject=subject, experiment=experiment):
+        if collections and fr.get('collection') not in collections:
+            lgr.debug('File excluded by collection selection')
+            continue
+        # communicate the query (makes outside error control possible)
+        yield fr
+        # TODO the file size is at file_rec['Size'], could be used
+        # for progress reporting, maybe
+        # create line for each file with necessary subject info
+        fh.writerow([
+            fr['subject_id'],
+            fr['experiment_id'],
+            fr['scan_id'],
+            fr['name'],
+            fr['url'],
+        ])

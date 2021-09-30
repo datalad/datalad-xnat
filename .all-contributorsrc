@@ -119,6 +119,18 @@
         "question",
         "doc"
       ]
+    },
+    {
+      "login": "oportoles",
+      "name": "oportoles",
+      "avatar_url": "https://avatars.githubusercontent.com/u/89771034?v=4",
+      "profile": "https://github.com/oportoles",
+      "contributions": [
+        "userTesting",
+        "doc",
+        "bug",
+        "tutorial"
+      ]
     }
   ],
   "contributorsPerLine": 7,

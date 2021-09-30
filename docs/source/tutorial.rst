@@ -4,7 +4,8 @@ Tutorial
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    tutorial/authentication
    tutorial/tracking_a_project
+   tutorial/understanding-init

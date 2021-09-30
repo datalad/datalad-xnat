@@ -180,8 +180,8 @@ class _XNAT(object):
 
     def get_subject_ids(self, project):
         """Return a list of subject IDs available in a project"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('subjects', project=project)))
+        return self._unwrap_ids(self._unwrap(self._wrapped_get(
+            self._get_api('subjects', project=project))))
 
     def get_nsubjs(self, project):
         """Return the number of subjects available in a project"""
@@ -213,8 +213,8 @@ class _XNAT(object):
 
     def get_scan_ids(self, experiment):
         """Return a list of scan IDs available for an experiment"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('scans', experiment=experiment)))
+        return self._unwrap_ids(self._unwrap(self._wrapped_get(
+            self._get_api('scans', experiment=experiment))))
 
     def get_files(self, experiment):
         """Return a list of file records for a scan in an experiment"""

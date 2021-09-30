@@ -34,6 +34,10 @@ from datalad.distribution.dataset import (
     require_dataset,
 )
 
+from datalad.interface.common_opts import (
+    jobs_opt,
+)
+
 from .platform import _XNAT
 
 
@@ -82,13 +86,14 @@ class Update(Interface):
             args=("-f", "--force",),
             doc="""force (re-)building the addurl tables""",
             action='store_true'),
-        **_XNAT.cmd_params
+        **_XNAT.cmd_params,
+        jobs=jobs_opt
     )
 
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, reckless=None, force=False):
+    def __call__(subjects='list', credential=None, dataset=None, ifexists=None, reckless=None, force=False, jobs='auto'):
 
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
@@ -192,6 +197,7 @@ class Update(Interface):
                     fast=True if reckless == 'fast'
                     else False,
                     save=True,
+                    jobs=jobs,
                     cfg_proc=None if platform.credential_name == 'anonymous'
                     else 'xnat_dataset',
                     result_renderer='default')

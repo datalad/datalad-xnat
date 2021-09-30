@@ -33,7 +33,7 @@ lgr = logging.getLogger('datalad.xnat.query')
 
 
 @build_doc
-class Query(Interface):
+class QueryFiles(Interface):
     """Query an XNAT server for projects, or an XNAT project for subjects
 
     Use this command to get a list of available projects at an XNAT instance

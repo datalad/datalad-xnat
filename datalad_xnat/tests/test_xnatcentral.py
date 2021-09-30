@@ -41,6 +41,8 @@ SUBJECT = "CENTRAL_S01894"
 N_SUBJECTS = 2
 EXPERIMENT = "CENTRAL_E03907"
 SCAN = "2"
+FILE = "dcmtest1.MR.Sample_DICOM.2.1.20010108.120022.1azj8tu.dcm"
+FILE_KEY = "MD5E-s533936--b402d6341f5894c63c991c6361ad14ff.dcm"
 
 
 def test_anonymous_access_platform():
@@ -78,7 +80,7 @@ def test_anonymous_access_platform():
                  )
 
     # test scan info functions
-    assert_equal([SCAN], platform.get_scan_ids(EXPERIMENT))
+    assert_in(SCAN, platform.get_scan_ids(EXPERIMENT))
     assert_raises(XNATRequestError,
                   platform.get_scan_ids, NON_EXISTENT_EXPERIMENT)
 
@@ -102,10 +104,9 @@ def test_anonymous_access_api(path):
     # we get the project's payload DICOM in the expected location
     assert_in_results(
         ds.status(annex='availability', recursive=True),
-        key='MD5E-s533936--b402d6341f5894c63c991c6361ad14ff.dcm',
+        key=FILE_KEY,
         has_content=True,
-        path=str(ds.pathobj / SUBJECT / EXPERIMENT / SCAN /
-                 'dcmtest1.MR.Sample_DICOM.2.1.20010108.120022.1azj8tu.dcm'),
+        path=str(ds.pathobj / SUBJECT / EXPERIMENT / SCAN / FILE),
         state='clean',
         # this seems like a bug, in subdatasets type='symlink'...
         # type='file',

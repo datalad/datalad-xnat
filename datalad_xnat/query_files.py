@@ -80,18 +80,6 @@ class QueryFiles(Interface):
             args=("url",),
             doc="""XNAT instance URL to query""",
         ),
-        project=Parameter(
-            args=("--project",),
-            doc="""name of an XNAT project to query""",
-        ),
-        experiment=Parameter(
-            args=("--experiment",),
-            doc="""name of an XNAT experiment to query""",
-        ),
-        subject=Parameter(
-            args=("--subject",),
-            doc="""name of an XNAT subject to query""",
-        ),
         **_XNAT.cmd_params
     )
 

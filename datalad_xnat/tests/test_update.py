@@ -31,7 +31,10 @@ def fake_init(path):
     _cfg_dataset(
         ds,
         'https://example.com',
-        'dummy',
+        'dummy_project',
+        'dummy_subject',
+        'dummy_experiment',
+        'dummy_collection',
         '{subject}/{session}/{scan}/',
         'nocredential',
     )

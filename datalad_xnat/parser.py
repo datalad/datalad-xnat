@@ -17,20 +17,22 @@ from datalad_xnat.query_files import query_files
 lgr = logging.getLogger('datalad.xnat.parse')
 
 
-def parse_xnat(outfile, sub, force, platform, xnat_project, collections=None):
+def parse_xnat(outfile, platform, force=False,
+               project=None, subject=None, experiment=None,
+               collections=None):
     """Lookup specified subject for configured XNAT project and build csv table.
 
     Parameters
     ----------
     outfile: file-like
         Writable file descriptor.
-    sub: str
-        The subject to build a csv table for.
-    force: str
-        Re-build csv table if it already exists.
     platform: str
         XNAT instance
-    xnat_project: str
+    force: str
+        Re-build csv table if it already exists.
+    project: str
+    subject: str
+    experiment: str
     collections : list
         If given, a list of collection/resource labels to limit the results
         to.
@@ -41,8 +43,8 @@ def parse_xnat(outfile, sub, force, platform, xnat_project, collections=None):
     # write subject info to file
     fh = csv.writer(outfile, delimiter=',')
     fh.writerow(table_header)
-    lgr.info('Querying info for subject %s', sub)
-    for fr in query_files(platform, project=xnat_project, subject=sub):
+    for fr in query_files(
+            platform, project=project, subject=subject, experiment=experiment):
         if collections and fr.get('collection') not in collections:
             lgr.debug('File excluded by collection selection')
             continue

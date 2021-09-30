@@ -88,23 +88,15 @@ def test_anonymous_access_api(path):
     # test command usage w/ anonymous access to xnatcentral
 
     ds = Dataset(path).create()
-    assert_in_results(
-        ds.xnat_init(
-            XNAT_URL,
-            project=NON_EXISTENT_PROJECT,
-            credential=XNAT_CREDENTIAL,
-            on_failure='ignore'),
-        status='error',
-        action='xnat_init')
     # minimal demo dataset (pulls .5MB from xnat central)
     ds.xnat_init(
         XNAT_URL,
         project=PROJECT,
-        path='{subject}//{session}/{scan}/',
+        subject=SUBJECT,
+        pathfmt='{subject}//{session}/{scan}/',
         credential=XNAT_CREDENTIAL)
     ds.xnat_update(
         # must be a subject's accession ID
-        subjects=SUBJECT,
         jobs=2,
     )
     # we get the project's payload DICOM in the expected location

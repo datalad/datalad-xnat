@@ -10,6 +10,7 @@
 """
 
 import logging
+from tempfile import NamedTemporaryFile
 
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
@@ -160,30 +161,36 @@ class Update(Interface):
         from datalad_xnat.parser import parse_xnat
         addurl_dir = ds.pathobj / 'code' / 'addurl_files'
         for sub in subs:
-            yield from parse_xnat(
-                ds,
-                sub=sub,
-                force=force,
-                platform=platform,
-                xnat_project=xnat_project,
-            )
+            with NamedTemporaryFile(
+                    'w',
+                    newline='',
+                    encoding='utf-8') as addurls_table:
+                yield from parse_xnat(
+                    addurls_table,
+                    sub=sub,
+                    force=force,
+                    platform=platform,
+                    xnat_project=xnat_project,
+                )
+                # make sure the table content is on disk for addurls
+                # to read
+                addurls_table.flush()
 
-            # add file urls for subject
-            lgr.info('Downloading files for subject %s', sub)
-            table = addurl_dir / f'{sub}_table.csv'
-            # this corresponds to the header field 'filename' in the csv table
-            filename = '{filename}'
-            filenameformat = f"{file_path}{filename}"
-            ds.addurls(
-                str(table), '{url}', filenameformat,
-                ifexists=ifexists,
-                fast=True if reckless == 'fast'
-                else False,
-                save=False,
-                cfg_proc=None if platform.credential_name == 'anonymous'
-                else 'xnat_dataset',
-                result_renderer='default',
-            )
+                # add file urls for subject
+                lgr.info('Downloading files for subject %s', sub)
+                # corresponds to the header field 'filename' in the csv table
+                filename = '{filename}'
+                filenameformat = f"{file_path}{filename}"
+                ds.addurls(
+                    addurls_table.name, '{url}', filenameformat,
+                    ifexists=ifexists,
+                    fast=True if reckless == 'fast'
+                    else False,
+                    save=False,
+                    cfg_proc=None if platform.credential_name == 'anonymous'
+                    else 'xnat_dataset',
+                    result_renderer='default',
+                )
 
             ds.save(
                 message=f"Update files for subject {sub}",

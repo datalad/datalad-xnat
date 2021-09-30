@@ -102,13 +102,22 @@
       ]
     },
     {
+      "login": "bpoldrack",
+      "name": "Benjamin Poldrack",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10498301?v=4",
+      "profile": "https://github.com/bpoldrack",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
       "login": "aqw",
       "name": "Alex Waite",
       "avatar_url": "https://avatars.githubusercontent.com/u/765557?v=4",
       "profile": "https://github.com/aqw",
       "contributions": [
         "question"
-      ]
+        ]
     }
   ],
   "contributorsPerLine": 7,

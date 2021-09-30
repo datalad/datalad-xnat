@@ -84,6 +84,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/tsankeuodelfa"><img src="https://avatars.githubusercontent.com/u/83062549?v=4?s=100" width="100px;" alt=""/><br /><sub><b>tsankeuodelfa</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=tsankeuodelfa" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/mslw"><img src="https://avatars.githubusercontent.com/u/11985212?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Michał Szczepanik</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=mslw" title="Documentation">📖</a> <a href="https://github.com/datalad/datalad-xnat/commits?author=mslw" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/bpoldrack"><img src="https://avatars.githubusercontent.com/u/10498301?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Benjamin Poldrack</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=bpoldrack" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/aqw"><img src="https://avatars.githubusercontent.com/u/765557?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alex Waite</b></sub></a><br /><a href="#question-aqw" title="Answering Questions">💬</a></td>
   </tr>
 </table>

@@ -20,8 +20,8 @@ imaging-based projects.
 Command(s) provided by this extension
 
 - `xnat-init` -- Initialize an existing dataset to track an XNAT project
-- `xnat-update` -- Update an existing dataset of an XNAT project
-
+- `xnat-update` -- Update an existing dataset of an XNAT project; retrieve data from the tracked project
+- `xnat-query-files` -- Query available files on an XNAT instance or project
 
 ## Installation
 

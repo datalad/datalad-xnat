@@ -32,6 +32,29 @@ __docformat__ = 'restructuredtext'
 lgr = logging.getLogger('datalad.xnat.query')
 
 
+# map which experiment properties to import into a file record under what
+# name. all source name are lower-case
+# these properties will overwrite any conflicting items in the file record!
+_import_experiment_props = {
+    'subject_id': 'subject_id',
+    'id': 'experiment_id',
+    'project': 'project_id',
+    'uri': 'experiment_uri',
+    'subject_label': 'subject_label',
+}
+
+_standardize_file_keys = {
+    'size': 'byte-size',
+    # this is an MD5sum, but is that always true?
+    'digest': 'digest',
+    'collection': 'collection',
+    'name': 'name',
+    'file_format': 'file_format',
+    'file_content': 'file_content',
+    'uri': 'uri',
+}
+
+
 @build_doc
 class QueryFiles(Interface):
     """Query an XNAT server for projects, or an XNAT project for subjects
@@ -72,28 +95,6 @@ class QueryFiles(Interface):
         **_XNAT.cmd_params
     )
 
-    # map which experiment properties to import into a file record under what
-    # name. all source name are lower-case
-    # these properties will overwrite any conflicting items in the file record!
-    _import_experiment_props = {
-        'subject_id': 'subject_id',
-        'id': 'experiment_id',
-        'project': 'project_id',
-        'uri': 'experiment_uri',
-        'subject_label': 'subject_label',
-    }
-
-    _standardize_file_keys = {
-        'size': 'byte-size',
-        # this is an MD5sum, but is that always true?
-        'digest': 'digest',
-        'collection': 'collection',
-        'name': 'name',
-        'file_format': 'file_format',
-        'file_content': 'file_content',
-        'uri': 'uri',
-    }
-
     @staticmethod
     @datasetmethod(name='xnat_query')
     @eval_results
@@ -104,64 +105,74 @@ class QueryFiles(Interface):
                  credential=None):
 
         platform = _XNAT(url, credential=credential)
-        # prep for yield
-        res = dict(
-            action='xnat_query',
-            logger=lgr
+
+        yield from query_files(
+            platform,
+            experiment=experiment,
+            project=project,
+            subject=subject,
         )
 
-        if experiment and (project or subject):
-            lgr.warning(
-                'experiment given, will ignore project and subject '
-                'specifications')
-        experiments = {}
-        if experiment:
-            # inject experiment record placeholders, to trigger a later
-            # query
-            for er in ensure_list(experiment):
-                experiments[er] = None
-        else:
-            # query for experiments, based potential project and subject
-            # constraints
-            for er in platform.get_experiments(
-                    project=project,
-                    subject=subject):
-                # normalize keys
-                er = {k.lower(): v for k, v in er.items()}
-                experiments[er['id']] = er
 
-        for eid, er in experiments.items():
-            if not er:
-                er = platform.get_experiment(eid)
+def query_files(platform, experiment=None, project=None, subject=None):
+    # prep for yield
+    res = dict(
+        action='xnat_query',
+        logger=lgr
+    )
 
-            for fr in platform.get_files(eid):
-                fr = {
-                    Query._standardize_file_keys[k.lower()]: v
-                    for k, v in fr.items()
-                    if k.lower() in Query._standardize_file_keys
-                }
-                # spot check digest
-                digest = fr.pop('digest')
-                if len(digest) == 32:
-                    fr['digest-md5'] = digest
-                else:
-                    lgr.debug('Unrecognized digest of length %i ignored',
-                              len(digest))
-                # figure our scan ID from URI
-                path = PurePosixPath(fr['uri'])
-                # API is /data/experiments/ID/scans/ID/resources/ID/files/NAME
-                fr['scan_id'] = path.parts[5]
-                # we need a file extension for conveniently building E-keys
-                # for git-annex
-                # we cannot use '.suffixes', because an entire DICOM filename
-                # is considered a suffix ;-)
-                fr['name_suffix'] = ''.join(PurePosixPath(fr['name']).suffix)
-                # inject a full URL for convenience too
-                fr['url'] = f'{platform.url}{fr["uri"]}'
-                for ik, ek in Query._import_experiment_props.items():
-                    if ik in er:
-                        fr[ek] = er[ik]
-                yield dict(res,
-                           status='ok',
-                           type='file',
-                           **fr)
+    if experiment and (project or subject):
+        lgr.warning(
+            'experiment given, will ignore project and subject '
+            'specifications')
+    experiments = {}
+    if experiment:
+        # inject experiment record placeholders, to trigger a later
+        # query
+        for er in ensure_list(experiment):
+            experiments[er] = None
+    else:
+        # query for experiments, based potential project and subject
+        # constraints
+        for er in platform.get_experiments(
+                project=project,
+                subject=subject):
+            # normalize keys
+            er = {k.lower(): v for k, v in er.items()}
+            experiments[er['id']] = er
+
+    for eid, er in experiments.items():
+        if not er:
+            er = platform.get_experiment(eid)
+
+        for fr in platform.get_files(eid):
+            fr = {
+                _standardize_file_keys[k.lower()]: v
+                for k, v in fr.items()
+                if k.lower() in _standardize_file_keys
+            }
+            # spot check digest
+            digest = fr.pop('digest')
+            if len(digest) == 32:
+                fr['digest-md5'] = digest
+            else:
+                lgr.debug('Unrecognized digest of length %i ignored',
+                          len(digest))
+            # figure our scan ID from URI
+            path = PurePosixPath(fr['uri'])
+            # API is /data/experiments/ID/scans/ID/resources/ID/files/NAME
+            fr['scan_id'] = path.parts[5]
+            # we need a file extension for conveniently building E-keys
+            # for git-annex
+            # we cannot use '.suffixes', because an entire DICOM filename
+            # is considered a suffix ;-)
+            fr['name_suffix'] = ''.join(PurePosixPath(fr['name']).suffix)
+            # inject a full URL for convenience too
+            fr['url'] = f'{platform.url}{fr["uri"]}'
+            for ik, ek in _import_experiment_props.items():
+                if ik in er:
+                    fr[ek] = er[ik]
+            yield dict(res,
+                       status='ok',
+                       type='file',
+                       **fr)

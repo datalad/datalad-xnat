@@ -10,6 +10,9 @@
 """
 
 import logging
+import os
+from pathlib import Path
+from tempfile import mkstemp
 
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
@@ -184,37 +187,43 @@ class Update(Interface):
 
         # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat
-        addurl_dir = ds.pathobj / 'code' / 'addurl_files'
         for sub in subs:
-            yield from parse_xnat(
-                ds,
-                sub=sub,
-                force=force,
-                platform=platform,
-                xnat_project=xnat_project,
-            )
+            try:
+                # all this tempfile madness is only needed because windows
+                # cannot open the same file twice. shame!
+                addurls_table, addurls_table_fname = mkstemp()
+                addurls_table_fname = Path(addurls_table_fname)
+                os.close(addurls_table)
+                with open(
+                        addurls_table_fname,
+                        'w',
+                        newline='',
+                        encoding='utf-8') as addurls_table:
+                    yield from parse_xnat(
+                        addurls_table,
+                        sub=sub,
+                        force=force,
+                        platform=platform,
+                        xnat_project=xnat_project,
+                    )
 
-            # add file urls for subject
-            lgr.info('Downloading files for subject %s', sub)
-            table = addurl_dir / f'{sub}_table.csv'
-            # this corresponds to the header field 'filename' in the csv table
-            filename = '{filename}'
-            filenameformat = f"{file_path}{filename}"
-            ds.addurls(
-                str(table), '{url}', filenameformat,
-                ifexists=ifexists,
-                fast=True if reckless == 'fast'
-                else False,
-                save=False,
-                cfg_proc=None if platform.credential_name == 'anonymous'
-                else 'xnat_dataset',
-                result_renderer='default',
-            )
-
-            ds.save(
-                message=f"Update files for subject {sub}",
-                recursive=True
-            )
+                # add file urls for subject
+                lgr.info('Downloading files for subject %s', sub)
+                # corresponds to the header field 'filename' in the csv table
+                filename = '{filename}'
+                filenameformat = f"{file_path}{filename}"
+                ds.addurls(
+                    str(addurls_table_fname), '{url}', filenameformat,
+                    ifexists=ifexists,
+                    fast=True if reckless == 'fast'
+                    else False,
+                    save=True,
+                    cfg_proc=None if platform.credential_name == 'anonymous'
+                    else 'xnat_dataset',
+                    result_renderer='default')
+            finally:
+                if addurls_table_fname.exists():
+                    addurls_table_fname.unlink()
 
         lgr.info('Files were updated for the following subjects in XNAT project %s:', xnat_project)
         for s in sorted(subs):

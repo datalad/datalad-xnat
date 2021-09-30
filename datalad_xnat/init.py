@@ -148,6 +148,10 @@ class Init(Interface):
             return
 
         if project is None:
+            from datalad.ui import ui
+            lgr.info('Querying %s for projects available to user %s', url,
+                     'anonymous' if platform.credential_name == 'anonymous'
+                     else platform.authenticated_user)
             projects = platform.get_project_ids()
             from datalad.ui import ui
             if ui.is_interactive:

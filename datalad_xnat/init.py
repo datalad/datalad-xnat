@@ -153,17 +153,34 @@ class Init(Interface):
                      'anonymous' if platform.credential_name == 'anonymous'
                      else platform.authenticated_user)
             projects = platform.get_project_ids()
-            ui.message(
-                'No project name specified. The following projects are '
-                'available on {} for user {}:'.format(
+            from datalad.ui import ui
+            if ui.is_interactive:
+                import inquirer
+                from inquirer.themes import GreenPassion
+                message = 'Select a project via arrow keys, ' \
+                          'confirm with "Enter"'.format(
                     url,
-                    'anonymous' if platform.credential_name == 'anonymous'
-                    else platform.authenticated_user))
-            for p in sorted(projects):
-                # list and prep for C&P
-                # TODO multi-column formatting?
-                ui.message("  {}".format(quote_cmdlinearg(p)))
-            return
+                    'anonymous' if platform.credential_name == 'anonymous' \
+                        else platform.authenticated_user)
+                checkbox = [inquirer.List('project',
+                                          message=message,
+                                          choices=sorted(projects))]
+                resp = inquirer.prompt(checkbox, theme=GreenPassion())
+                lgr.info("Received the following project selection from the "
+                         "interactive prompt: %s", str(resp['project']))
+                project = resp['project']
+            else:
+                ui.message(
+                    'No project name specified. The following projects are '
+                    'available on {} for user {}:'.format(
+                        url,
+                        'anonymous' if platform.credential_name == 'anonymous'
+                        else platform.authenticated_user))
+                for p in sorted(projects):
+                    # list and prep for C&P
+                    # TODO multi-column formatting?
+                    ui.message("  {}".format(quote_cmdlinearg(p)))
+                return
 
         # query the specified project to make sure it exists and is accessible
         try:

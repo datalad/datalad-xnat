@@ -10,7 +10,9 @@
 """
 
 import logging
-from tempfile import NamedTemporaryFile
+import os
+from pathlib import Path
+from tempfile import mkstemp
 
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
@@ -159,23 +161,25 @@ class Update(Interface):
 
         # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat
-        addurl_dir = ds.pathobj / 'code' / 'addurl_files'
         for sub in subs:
-            with NamedTemporaryFile(
-                    'w',
-                    newline='',
-                    encoding='utf-8') as addurls_table:
-                yield from parse_xnat(
-                    addurls_table,
-                    sub=sub,
-                    force=force,
-                    platform=platform,
-                    xnat_project=xnat_project,
-                )
-                # make sure the table content is on disk for addurls
-                # to read
-                addurls_table.flush()
-                addurls_table.close()
+            try:
+                # all this tempfile madness is only needed because windows
+                # cannot open the same file twice. shame!
+                addurls_table, addurls_table_fname = mkstemp()
+                addurls_table_fname = Path(addurls_table_fname)
+                os.close(addurls_table)
+                with open(
+                        addurls_table_fname,
+                        'w',
+                        newline='',
+                        encoding='utf-8') as addurls_table:
+                    yield from parse_xnat(
+                        addurls_table,
+                        sub=sub,
+                        force=force,
+                        platform=platform,
+                        xnat_project=xnat_project,
+                    )
 
                 # add file urls for subject
                 lgr.info('Downloading files for subject %s', sub)
@@ -183,7 +187,7 @@ class Update(Interface):
                 filename = '{filename}'
                 filenameformat = f"{file_path}{filename}"
                 ds.addurls(
-                    addurls_table.name, '{url}', filenameformat,
+                    str(addurls_table_fname), '{url}', filenameformat,
                     ifexists=ifexists,
                     fast=True if reckless == 'fast'
                     else False,
@@ -192,6 +196,9 @@ class Update(Interface):
                     else 'xnat_dataset',
                     result_renderer='default',
                 )
+            finally:
+                if addurls_table_fname.exists():
+                    addurls_table_fname.unlink()
 
             ds.save(
                 message=f"Update files for subject {sub}",

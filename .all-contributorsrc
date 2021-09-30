@@ -117,7 +117,16 @@
       "profile": "https://github.com/aqw",
       "contributions": [
         "question"
-        ]
+      ]
+    },
+    {
+      "login": "oportoles",
+      "name": "oportoles",
+      "avatar_url": "https://avatars.githubusercontent.com/u/89771034?v=4",
+      "profile": "https://github.com/oportoles",
+      "contributions": [
+        "userTesting"
+      ]
     }
   ],
   "contributorsPerLine": 7,

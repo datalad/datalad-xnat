@@ -50,9 +50,10 @@ class _XNAT(object):
         session_token='data/JSESSION',
         projects='data/projects?format=json',
         subjects='data/projects/{project}/subjects?format=json',
-        experiments='data/projects/{project}/subjects/{subject}/experiments?format=json',
+        experiment='data/experiments/{experiment}?format=json',
+        experiments='data/experiments?format=json',
         scans='data/experiments/{experiment}/scans?format=json',
-        files='data/experiments/{experiment}/scans/{scan}/files?format=json',
+        files='data/experiments/{experiment}/scans/ALL/files?format=json',
     )
 
     cmd_params = dict(
@@ -123,6 +124,7 @@ class _XNAT(object):
         """
 
         try:
+            lgr.debug('GET: %s, %s', args, kwargs)
             response = self._session.get(*args, **kwargs)
             response.raise_for_status()
             return response
@@ -168,10 +170,13 @@ class _XNAT(object):
     def authenticated_user(self):
         return self._session.auth[0] if self._session else None
 
+    def get_projects(self):
+        """Returns a list with project records"""
+        return self._unwrap(self._wrapped_get(self._get_api('projects')))
+
     def get_project_ids(self):
         """Returns a list with project identifiers"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('projects')))
+        return self._unwrap_ids(self.get_subject_ids())
 
     def get_subject_ids(self, project):
         """Return a list of subject IDs available in a project"""
@@ -182,22 +187,34 @@ class _XNAT(object):
         """Return the number of subjects available in a project"""
         return len(self.get_subject_ids(project))
 
-    def get_experiment_ids(self, project, subject):
+    def get_experiment(self, experiment):
+        """Return an experiment record"""
+        url = self._get_api('experiment', experiment=experiment)
+        return self._unwrap(self._wrapped_get(url))
+
+    def get_experiments(self, project=None, subject=None):
+        """Return a list of experiment records for a project's subject"""
+        url = self._get_api('experiments')
+        # optionally constrain the query
+        if project:
+            url += f'&project={project}'
+        if subject:
+            url += f'&subject_ID={subject}'
+        return self._unwrap(self._wrapped_get(url))
+
+    def get_experiment_ids(self, project=None, subject=None):
         """Return a list of experiment IDs available for a project's subject"""
-        return self._unwrap_ids(self._wrapped_get(
-            self._get_api('experiments',
-                          project=project,
-                          subject=subject)))
+        return self._unwrap_ids(self.get_experiments(project, subject))
 
     def get_scan_ids(self, experiment):
         """Return a list of scan IDs available for an experiment"""
         return self._unwrap_ids(self._wrapped_get(
             self._get_api('scans', experiment=experiment)))
 
-    def get_files(self, experiment, scan):
+    def get_files(self, experiment):
         """Return a list of file records for a scan in an experiment"""
         return self._unwrap(self._wrapped_get(
-            self._get_api('files', experiment=experiment, scan=scan)))
+            self._get_api('files', experiment=experiment)))
 
     def _get_api(self, id, **kwargs):
         ep = self.api_endpoints[id]
@@ -208,11 +225,10 @@ class _XNAT(object):
     def _unwrap(self, response):
         return response.json().get('ResultSet', {}).get('Result')
 
-    def _unwrap_ids(self, response):
-        unwrapped = self._unwrap(response)
+    def _unwrap_ids(self, results):
         # do a little dance to figure out what the ID key is
         # normal XNAT is 'ID', but connectomeDB uses 'id'
         # TODO is there a way to ask XNAT what it would be
         # maybe query the schema?
-        id_attr = 'ID' if unwrapped and 'ID' in unwrapped[0] else 'id'
-        return [r[id_attr] for r in unwrapped]
+        id_attr = 'ID' if results and 'ID' in results[0] else 'id'
+        return [r[id_attr] for r in results]

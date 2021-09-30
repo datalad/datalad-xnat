@@ -49,4 +49,4 @@ Checkout the :ref:`Tutorial` for more detailed demonstrations.
 
 .. rubric:: Footnotes
 
-.. [#f1] While installable for Windows 10, the extension may not be able to perform all functionality documented here. Please get in touch if you are familiar with Windows `to help us fix bugs <https://github.com/datalad/datalad-osf/issues?q=is%3Aissue+is%3Aopen+windows>`_.
+.. [#f1] While installable for Windows 10, the extension may not be able to perform all functionality documented here. Please get in touch if you are familiar with Windows `to help us fix bugs <https://github.com/datalad/datalad-xnat>`_.

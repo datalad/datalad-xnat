@@ -3,7 +3,7 @@
 Command line reference
 ======================
 
-``datalad-xnat`` has three main commands: ``xnat-init`` for [COMPLETE ME], ``xnat-update`` [COMPLETE ME], and ``xnat-query`` for [COMPLETE ME].
+``datalad-xnat`` has three main commands: ``xnat-init`` for [COMPLETE ME], ``xnat-update`` [COMPLETE ME], and ``xnat-query-files`` for [COMPLETE ME].
 Find out more about each command below.
 
 .. toctree::

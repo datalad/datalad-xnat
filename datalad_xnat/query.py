@@ -118,7 +118,7 @@ class Query(Interface):
         if experiment:
             # inject experiment record placeholders, to trigger a later
             # query
-            for er in ensure_list(experiments):
+            for er in ensure_list(experiment):
                 experiments[er] = None
         else:
             # query for experiments, based potential project and subject

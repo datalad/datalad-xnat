@@ -190,7 +190,12 @@ class _XNAT(object):
     def get_experiment(self, experiment):
         """Return an experiment record"""
         url = self._get_api('experiment', experiment=experiment)
-        return self._unwrap(self._wrapped_get(url))
+        items = self._wrapped_get(url).json().get('items', [])
+        if not items:
+            return
+        if len(items) > 1:
+            raise ValueError('Non-unique experiment identifier')
+        return items[0]['data_fields']
 
     def get_experiments(self, project=None, subject=None):
         """Return a list of experiment records for a project's subject"""

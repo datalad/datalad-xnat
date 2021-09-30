@@ -85,6 +85,7 @@ class _XNAT(object):
             auth = None
         else:
             try:
+                lgr.info('Authenticating to %s', url)
                 auth = UserPassword(
                     credential,
                     url=f'{url}/app/template/Register.vm',

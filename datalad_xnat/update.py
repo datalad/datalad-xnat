@@ -61,13 +61,6 @@ class Update(Interface):
             doc="""specify the dataset to perform the update on""",
             constraints=EnsureDataset() | EnsureNone()
         ),
-        subjects=Parameter(
-            args=("-s", "--subjects"),
-            nargs='+',
-            doc="""Specify the subject(s) to downloaded associated files for.
-            'list': list existing subjects,
-            'all': download files for all existing subjects""",
-        ),
         ifexists=Parameter(
             args=("--ifexists",),
             doc="""Flag for addurls""",
@@ -87,17 +80,13 @@ class Update(Interface):
             doc="""force (re-)building the addurl tables""",
             action='store_true'),
         jobs=jobs_opt,
-        collection=Parameter(
-            args=("--collection",),
-            action='append',
-            doc="""collection/resource to limit the update to"""),
         **_XNAT.cmd_params
     )
 
     @staticmethod
     @datasetmethod(name='xnat_update')
     @eval_results
-    def __call__(subjects='list',
+    def __call__(subject=None,
                  credential=None,
                  dataset=None,
                  ifexists=None,
@@ -109,7 +98,7 @@ class Update(Interface):
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
-        subjects = ensure_list(subjects)
+        subjects = ensure_list(subject)
 
         # require a clean dataset
         if ds.repo.dirty:
@@ -142,44 +131,12 @@ class Update(Interface):
 
         platform = _XNAT(xnat_url, credential=credential)
 
-        # provide subject list
-        if 'list' in subjects:
-            from datalad.ui import ui
-            subs = platform.get_subject_ids(xnat_project)
-            ui.message(
-                'The following subjects are available for XNAT '
-                'project {}:'.format(xnat_project))
-            for s in sorted(subs):
-                ui.message(" {}".format(quote_cmdlinearg(s)))
-            ui.message(
-                'Specify a specific subject(s) or "all" to download '
-                'associated files for.')
-            return
-
-        # query the specified subject(s) to make sure it exists
-        # and is accessible
-        # TODO we culd just take the input subject list at face-value
-        # and report on all subjects for whom we got no data, instead of one
-        # upfront query per subject
-        if 'all' not in subjects:
-            from datalad.ui import ui
-            subs = []
-            for s in subjects:
-                nexp = len(platform.get_experiment_ids(xnat_project, s))
-                if nexp > 0:
-                    subs.append(s)
-                else:
-                    ui.message(
-                        'Failed to obtain information on subject {} from XNAT '
-                        'project {}:'.format(s, xnat_project))
-                    return
-        else:
-            # if all, get list of all subjects
-            subs = platform.get_subject_ids(xnat_project)
+        if not subjects:
+            subjects = platform.get_subject_ids(xnat_project)
 
         # parse and download one subject at a time
         from datalad_xnat.parser import parse_xnat
-        for sub in subs:
+        for sub in subjects:
             try:
                 # all this tempfile madness is only needed because windows
                 # cannot open the same file twice. shame!
@@ -223,7 +180,7 @@ class Update(Interface):
         lgr.info(
             'There were updates for the following subjects in project %s:',
             xnat_project)
-        for s in sorted(subs):
+        for s in sorted(subjects):
             lgr.info(" {}".format(quote_cmdlinearg(s)))
 
         yield dict(

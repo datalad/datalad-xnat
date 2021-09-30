@@ -71,6 +71,29 @@ class _XNAT(object):
             provided name. If none is provided, the host-part of the XNAT URL
             is used as a name (e.g. 'https://central.xnat.org' ->
             'central.xnat.org')"""),
+        project=Parameter(
+            args=("-p", "--project",),
+            metavar='ID',
+            doc="""accession ID of a single XNAT project to track""",
+        ),
+        subject=Parameter(
+            args=("-s", "--subject",),
+            metavar='ID',
+            doc="""accession ID of a single subject to track""",
+        ),
+        experiment=Parameter(
+            args=("-e", "--experiment",),
+            metavar='ID',
+            doc="""accession ID of a single experiment to track""",
+        ),
+        collection=Parameter(
+            args=("-c", "--collection",),
+            metavar='LABEL',
+            action='append',
+            doc="""limit updates to a specific collection/resource.
+            [CMD: Can be given multiple times CMD][PY: Multiple collections
+            can be specified as a list PY]""",
+        ),
     )
 
     def __init__(self, url, credential):

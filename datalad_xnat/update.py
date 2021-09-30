@@ -124,17 +124,43 @@ class Update(Interface):
 
         # provide subject list
         if 'list' in subjects:
-            from datalad.ui import ui
             subs = platform.get_subject_ids(xnat_project)
-            ui.message(
-                'The following subjects are available for XNAT '
-                'project {}:'.format(xnat_project))
-            for s in sorted(subs):
-                ui.message(" {}".format(quote_cmdlinearg(s)))
-            ui.message(
-                'Specify a specific subject(s) or "all" to download associated '
-                'files for.')
-            return
+            from datalad.ui import ui
+            if ui.is_interactive:
+                import inquirer
+                from inquirer.themes import GreenPassion
+                hit = False
+                subs.insert(0, 'all')
+                subs.insert(1, 'cancel')
+                while not hit:
+                    message = 'Select subject(s) to download from ' \
+                              'Project "{}" via arrow keys. ' \
+                              'Confirm with "Enter"'.format(xnat_project)
+                    checkbox = [inquirer.Checkbox('subject',
+                                                  message=message,
+                                                  choices=subs)]
+                    resp = inquirer.prompt(checkbox, theme=GreenPassion())
+                    if resp['subject']:
+                        hit = True
+                    else:
+                        ui.message("Please select one or more subjects using "
+                                   "the right arrow keys. Unselect with the "
+                                   "left arrow key.")
+                    if 'cancel' in resp['subject']:
+                        return
+                lgr.info("Received the following subject list from an "
+                         "interactive prompt: %s", str(resp['subject']))
+                subjects = resp['subject']
+            else:
+                ui.message(
+                    'The following subjects are available for XNAT '
+                    'project {}:'.format(xnat_project))
+                for s in sorted(subs):
+                    ui.message(" {}".format(quote_cmdlinearg(s)))
+                ui.message(
+                    'Specify a specific subject(s) or "all" to download associated '
+                    'files for.')
+                return
 
         # query the specified subject(s) to make sure it exists and is accessible
         # TODO we culd just take the input subject list at face-value

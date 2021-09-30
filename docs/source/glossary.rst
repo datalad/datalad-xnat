@@ -6,10 +6,10 @@ Glossary
 .. glossary::
 
    experiment
-       TODO
+       An experiment is an event by which data is acquired. This data can be imaging data, or non-imaging data. It exists within the context of a :term:`project`, but can be registered into multiple :term:`project`\s.
 
    project
-       TODO
+       A project is used to define a collection of data stored in XNAT. These often correlate directly to an IRB approved study, or a multi-site data acquisition program. Within XNAT, the project is used to define a security structure for data. Users are given certain permissions for data within certain projects -- thus, as a user you may not have permissions for all projects on a given XNAT instance.
 
    session
        TODO

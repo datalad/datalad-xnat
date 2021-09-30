@@ -105,6 +105,25 @@ class _XNAT(object):
         self._wrapped_post(self._get_api('session_token'))
         self._credential_name = credential
 
+    def _wrapped_request(self, method, *args, **kwargs):
+        """Helper for `_wrapped_get` and `_wrapped_post`"""
+
+        if method not in ['GET', 'POST']:
+            raise ValueError("method parameter can either be 'GET' or 'POST'.")
+
+        req = self._session.get if method == 'GET' else self._session.post
+
+        try:
+            lgr.debug('%s: %s, %s', method, args, kwargs)
+            response = req(*args, **kwargs)
+            response.raise_for_status()
+            return response
+        except HTTPError as exc:
+            reason = exc.response.reason or \
+                     http_error_lookup[exc.response.status_code]
+            raise XNATRequestError("Request to XNAT server failed: %s"
+                                   % reason) from exc
+
     def _wrapped_get(self, *args, **kwargs):
         """Wraps `self._session.get` for error handling.
 
@@ -123,16 +142,7 @@ class _XNAT(object):
         XNATRequestError
         """
 
-        try:
-            lgr.debug('GET: %s, %s', args, kwargs)
-            response = self._session.get(*args, **kwargs)
-            response.raise_for_status()
-            return response
-        except HTTPError as exc:
-            reason = exc.response.reason or \
-                     http_error_lookup[exc.response.status_code]
-            raise XNATRequestError("Request to XNAT server failed: %s"
-                                   % reason) from exc
+        return self._wrapped_request('GET', *args, **kwargs)
 
     def _wrapped_post(self, *args, **kwargs):
         """Wraps `self._session.post` for error handling.
@@ -152,15 +162,7 @@ class _XNAT(object):
         XNATRequestError
         """
 
-        try:
-            response = self._session.post(*args, **kwargs)
-            response.raise_for_status()
-            return response
-        except HTTPError as exc:
-            reason = exc.response.reason or \
-                     http_error_lookup[exc.response.status_code]
-            raise XNATRequestError("Request to XNAT server failed: %s"
-                                   % reason) from exc
+        return self._wrapped_request('POST', *args, **kwargs)
 
     @property
     def credential_name(self):

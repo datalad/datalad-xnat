@@ -143,7 +143,10 @@ def query_files(platform, experiment=None, project=None, subject=None):
 
     for eid, er in experiments.items():
         if not er:
-            er = platform.get_experiment(eid)
+            er = {
+                k.lower(): v
+                for k, v in platform.get_experiment(eid).items()
+            }
 
         for fr in platform.get_files(eid):
             fr = {

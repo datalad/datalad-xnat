@@ -12,6 +12,8 @@
 import logging
 import csv
 
+from datalad_xnat.query_files import query_files
+
 lgr = logging.getLogger('datalad.xnat.parse')
 
 
@@ -59,18 +61,17 @@ def parse_xnat(ds, sub, force, platform, xnat_project):
         fh = csv.writer(outfile, delimiter=',')
         fh.writerow(table_header)
         lgr.info('Querying info for subject %s', sub)
-        for experiment in platform.get_experiment_ids(xnat_project, sub):
-            for scan in platform.get_scan_ids(experiment):
-                for file_rec in platform.get_files(experiment, scan):
-                    # TODO the file size is at file_rec['Size'], could be used
-                    # for progress reporting, maybe
-                    filename = file_rec['Name']
-                    # URIs should be absolute, but be robust, just in case
-                    url = f"{platform.url}{file_rec['URI']}" \
-                        if file_rec['URI'][0] == '/' \
-                        else f"{platform.url}/{file_rec['URI']}"
-                    # create line for each file with necessary subject info
-                    fh.writerow([sub, experiment, scan, filename, url])
+        for fr in query_files(platform, project=xnat_project, subject=sub):
+            # TODO the file size is at file_rec['Size'], could be used
+            # for progress reporting, maybe
+            # create line for each file with necessary subject info
+            fh.writerow([
+                fr['subject_id'],
+                fr['experiment_id'],
+                fr['scan_id'],
+                fr['name'],
+                fr['url'],
+            ])
 
     ds.save(
         path=sub_table,

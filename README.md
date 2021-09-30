@@ -1,7 +1,6 @@
 # DataLad extension tracking data in an XNAT server
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-12-orange.svg?style=flat-square)](#contributors-)
-
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![GitHub release](https://img.shields.io/github/release/datalad/datalad-xnat.svg)](https://GitHub.com/datalad/datalad-xnat/releases/) [![PyPI version fury.io](https://badge.fury.io/py/datalad-xnat.svg)](https://pypi.python.org/pypi/datalad-xnat/) [![Build status](https://ci.appveyor.com/api/projects/status/7pug8bjjgdcvsfn7/branch/master?svg=true)](https://ci.appveyor.com/project/mih/datalad-xnat/branch/master) [![codecov.io](https://codecov.io/github/datalad/datalad-xnat/coverage.svg?branch=master)](https://codecov.io/github/datalad/datalad-xnat?branch=master) [![crippled-filesystems](https://github.com/datalad/datalad-xnat/workflows/crippled-filesystems/badge.svg)](https://github.com/datalad/datalad-xnat/actions?query=workflow%3Acrippled-filesystems)
@@ -86,7 +85,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/tsankeuodelfa"><img src="https://avatars.githubusercontent.com/u/83062549?v=4?s=100" width="100px;" alt=""/><br /><sub><b>tsankeuodelfa</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=tsankeuodelfa" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/mslw"><img src="https://avatars.githubusercontent.com/u/11985212?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Michał Szczepanik</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=mslw" title="Documentation">📖</a> <a href="https://github.com/datalad/datalad-xnat/commits?author=mslw" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/bpoldrack"><img src="https://avatars.githubusercontent.com/u/10498301?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Benjamin Poldrack</b></sub></a><br /><a href="https://github.com/datalad/datalad-xnat/commits?author=bpoldrack" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/aqw"><img src="https://avatars.githubusercontent.com/u/765557?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alex Waite</b></sub></a><br /><a href="#question-aqw" title="Answering Questions">💬</a> <a href="https://github.com/datalad/datalad-xnat/commits?author=aqw" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/aqw"><img src="https://avatars.githubusercontent.com/u/765557?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alex Waite</b></sub></a><br /><a href="#question-aqw" title="Answering Questions">💬</a> <a href="https://github.com/datalad/datalad-xnat/commits?author=aqw" title="Documentation">📖</a> <a href="#tutorial-aqw" title="Tutorials">✅</a></td>
+    <td align="center"><a href="https://github.com/oportoles"><img src="https://avatars.githubusercontent.com/u/89771034?v=4?s=100" width="100px;" alt=""/><br /><sub><b>oportoles</b></sub></a><br /><a href="#userTesting-oportoles" title="User Testing">📓</a> <a href="https://github.com/datalad/datalad-xnat/commits?author=oportoles" title="Documentation">📖</a> <a href="https://github.com/datalad/datalad-xnat/issues?q=author%3Aoportoles" title="Bug reports">🐛</a> <a href="#tutorial-oportoles" title="Tutorials">✅</a></td>
   </tr>
 </table>
 

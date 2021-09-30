@@ -25,6 +25,7 @@ Documentation overview
    contributing
    acknowledgements
    glossary
+   tutorial/walk-through_connectomeDB
 
 .. toctree::
    :maxdepth: 1

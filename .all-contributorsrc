@@ -50,7 +50,8 @@
       "profile": "https://github.com/jwodder",
       "contributions": [
         "code",
-        "ideas"
+        "ideas",
+        "maintenance"
       ]
     },
     {
@@ -139,5 +140,7 @@
   "projectOwner": "datalad",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": true,
+  "commitType": "docs",
+  "commitConvention": "angular"
 }

@@ -15,7 +15,7 @@ from datalad.api import (
     xnat_update,
 )
 
-from datalad.tests.utils import (
+from datalad.tests.utils_pytest import (
     assert_in_results,
     with_tempfile,
 )
@@ -23,7 +23,7 @@ from datalad.tests.utils import (
 from datalad_xnat.init import _cfg_dataset
 
 
-def fake_init(path):
+def fake_init(path=None):
     """Do whatever is needed to xnat-init() a fresh dataset without talking
     to a real XNAT instance
     """
@@ -43,7 +43,7 @@ def fake_init(path):
 
 
 @with_tempfile
-def test_invalid(path):
+def test_invalid(path=None):
     ds = fake_init(path)
     (ds.pathobj / 'dirty').write_text('dirt')
     # refuses to work on dirty datasets

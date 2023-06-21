@@ -52,4 +52,4 @@ jobs:
         echo "== mount >>"
         mount
         echo "<< mount =="
-        python -m nose -s -v --with-doctest --with-coverage --cover-package datalad_xnat datalad_xnat
+        python -m pytest -s -v --cov=datalad_xnat --pyargs datalad_xnat

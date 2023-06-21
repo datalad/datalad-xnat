@@ -14,7 +14,7 @@ from datalad.api import (
     Dataset,
     xnat_init,
 )
-from datalad.tests.utils import (
+from datalad.tests.utils_pytest import (
     assert_result_count,
     with_tempfile,
 )
@@ -22,7 +22,7 @@ from datalad.utils import Path
 
 
 @with_tempfile
-def test_invalid_url(dspath):
+def test_invalid_url(dspath=None):
 
     dspath = Path(dspath)
 

@@ -27,11 +27,11 @@ jobs:
       run: |
         git config --global user.email "test@github.land"
         git config --global user.name "GitHub Almighty"
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.6
+        python-version: 3.8
     - name: Install dependencies
       run: |
         pip install -r requirements-devel.txt
@@ -52,4 +52,4 @@ jobs:
         echo "== mount >>"
         mount
         echo "<< mount =="
-        python -m nose -s -v --with-doctest --with-coverage --cover-package datalad_xnat datalad_xnat
+        python -m pytest -s -v --cov=datalad_xnat --pyargs datalad_xnat

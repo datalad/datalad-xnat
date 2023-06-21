@@ -14,7 +14,7 @@ from datalad.api import (
     Dataset,
 )
 
-from datalad.tests.utils import (
+from datalad.tests.utils_pytest import (
     assert_equal,
     assert_in,
     assert_in_results,
@@ -86,7 +86,7 @@ def test_anonymous_access_platform():
 
 
 @with_tempfile
-def test_anonymous_access_api(path):
+def test_anonymous_access_api(path=None):
     # test command usage w/ anonymous access to nitrc-ir
 
     ds = Dataset(path).create()

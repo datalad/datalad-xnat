@@ -1,6 +1,7 @@
 include CONTRIBUTORS LICENSE versioneer.py
 include datalad_xnat/_version.py
 graft _datalad_buildsupport
+graft datalad_helloworld
 graft docs
 prune docs/build
 global-exclude *.py[cod]

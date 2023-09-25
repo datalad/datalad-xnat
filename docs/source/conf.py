@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# datalad_metalad documentation build configuration file, created by
+# datalad_helloworld documentation build configuration file, created by
 # sphinx-quickstart on Tue Oct 13 08:41:19 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -13,7 +13,7 @@
 # serve to show the default.
 
 import sys
-import os
+import subprocess
 
 import datetime
 from os.path import (
@@ -35,17 +35,19 @@ import datalad_xnat
 for setup_py_path in (opj(pardir, 'setup.py'),  # travis
                       opj(pardir, pardir, 'setup.py')):  # RTD
     if exists(setup_py_path):
-        sys.path.insert(0, os.path.abspath(dirname(setup_py_path)))
+        sys.path.insert(0, abspath(dirname(setup_py_path)))
+        # Build manpage
         try:
-            for cmd in 'manpage',: #'examples':
-                os.system(
-                    '{} build_{} --cmdsuite {} --manpath {} --rstpath {}'.format(
-                        setup_py_path,
-                        cmd,
-                        'datalad_xnat:command_suite',
-                        abspath(opj(dirname(setup_py_path), 'build', 'man')),
-                        opj(dirname(__file__), 'generated', 'man')))
-        except:
+            subprocess.run(
+                args=[setup_py_path, 'build_manpage',
+                     '--cmdsuite', 'datalad_xnat:command_suite',
+                     '--manpath', abspath(opj(
+                         dirname(setup_py_path), 'build', 'man')),
+                     '--rstpath', opj(dirname(__file__), 'generated', 'man'),
+                     ],
+                check=True,
+            )
+        except (FileNotFoundError, subprocess.CalledProcessError):
             # shut up and do your best
             pass
 
@@ -114,7 +116,7 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"python": ('https://docs.python.org/3', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 # -- Options for HTML output ----------------------------------------------
 

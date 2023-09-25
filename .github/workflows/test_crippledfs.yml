@@ -27,7 +27,7 @@ jobs:
       run: |
         git config --global user.email "test@github.land"
         git config --global user.name "GitHub Almighty"
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python 3.8
       uses: actions/setup-python@v4
       with:
@@ -52,4 +52,4 @@ jobs:
         echo "== mount >>"
         mount
         echo "<< mount =="
-        python -m pytest -s -v --cov=datalad_xnat --pyargs datalad_xnat
+        python -m pytest -s -v --doctest-modules --cov=datalad_xnat --pyargs datalad_xnat

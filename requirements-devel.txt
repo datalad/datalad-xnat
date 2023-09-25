@@ -1,5 +1,4 @@
 # requirements for a development environment
-pytest
-pytest-cov
+-e .[devel]
 sphinx
 sphinx_rtd_theme

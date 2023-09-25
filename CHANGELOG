@@ -1,3 +1,12 @@
+0.2.1 (Sep 25, 2023) -- maintenance
+
+- Minimal port of the test battery to pytest.
+
+- Bump dependency on DataLad to v0.18, for pytest compatible test helpers.
+
+- Minor updates of CI setup and packaging, following updates in the
+  DataLad extension template.
+
 0.2 (Sep 30, 2021) -- hackathon!!
 
 - The first actual release of this extension. It is the outcome of Juelich

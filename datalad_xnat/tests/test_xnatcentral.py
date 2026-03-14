@@ -8,7 +8,17 @@
 # ## ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 """Integration tests for XNAT central
 
+central.xnat.org was decommissioned in 2024.
+See https://sites.wustl.edu/oasisbrains/central-xnat/
+These tests are skipped until a replacement XNAT instance is configured.
 """
+
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="central.xnat.org has been decommissioned "
+    "(https://sites.wustl.edu/oasisbrains/central-xnat/)"
+)
 
 from datalad.api import (
     Dataset,
